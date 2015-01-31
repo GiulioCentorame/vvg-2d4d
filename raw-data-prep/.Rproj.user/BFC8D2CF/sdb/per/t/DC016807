@@ -1,0 +1,16 @@
+{
+    "contents" : "#combine 2d4d measurements and establish interrater reliability\n#written by HARD KREW on 2/1/2014 on a day of freezing rain\n\njul<-read.xlsx(file=\"digits_JS.xlsx\", 1)\nrac<-read.xlsx(file=\"digits_RP.xlsx\", 1)\ntay<-read.xlsx(file=\"digits_TG.xlsx\", 1)\nmean(colnames(jul) == colnames(rac) &\n       colnames(jul) == colnames(tay)) #should equal 1\n# pairwise plots reveal rachel must have made some errors\n# rachel's errors: 77 84 148\nbad=c(77,84,148)\nrac[rac$Subno %in% bad,] = NA\nrac$L_index_length[rac$L_index_length < 100] = NA\nrac$R_index_length[rac$R_index_length < 100] = NA\n\n\n####################\n# lets evaluate IRR#\n####################\n# individual digits IRR\ncortable=cor(x=jul[,1:11],y=rac[,1:11], use=\"pairwise.complete.obs\")\nIRR=diag(cortable)\nIRR\n\n\n\n# something's wrong (IRR = .3) so let's check histograms\nfor (i in 2:11) hist(jul[,i], main=colnames(jul)[i])\nfor (i in 2:11) hist(rac[,i], main=colnames(rac)[i])\n\n# pairwise ratio?\nL4 = jul[,2]/rac[,2]\nL2 = jul[,4]/rac[,4]\nR2 = jul[,6]/rac[,6]\nR4 = jul[,8]/rac[,8]\nsummary(L4); summary(L2); summary(R2); summary(R4)\nhist(L4); hist(L2); hist(R2); hist(R4)\n#pairwise plots\npairplot=function(i) {\n  plot(x=jul[,i], y=rac[,i], \n       main=colnames(jul)[i],\n       ylab=\"Rachel coded\",\n       xlab=\"Julian coded\")\n}\nfor (i in c(2:11)) pairplot(i)\n# rachel underestimates L_ring relative to Julian\n# L_index well-agreed\n# R_index well-agreed\n# rachel underestimates R_ring relative to Julian\n# maybe exclude obs with disagreement > 5%?\n\n# current IRRs: Left: 0.828, Right: 0.846\n\n# average them together for export\ndat = (jul[,1:11] + rac[,1:11])/2\ndat$noteJul = jul[,12]; dat$noteRac = rac[,12]\n\n# check to see if angle influences 2d4d\nm1 = lm(L_2d4d ~ L_ring_angle, data=dat)\nm2 = lm(R_2d4d ~ R_ring_angle, data=dat)\nm3 = lm(L_2d4d ~ L_index_angle, data=dat)\nm4 = lm(R_2d4d ~ R_index_angle, data=dat)\nsummary(m1); summary(m2); summary(m3); summary(m4)\n# doesn't seem to! That's good.\n\nprint(\"HARD KREW, you have to save manually!\")\n#write.table(dat, file=\"2d4d.txt\", sep=\"\\t\", row.names=F)\n",
+    "created" : 1422733246398.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "851454776",
+    "id" : "DC016807",
+    "lastKnownWriteTime" : 1422734505,
+    "path" : "~/GitHub/Dissertation/Analysis/raw-data-prep/2d4d.R",
+    "project_path" : "2d4d.R",
+    "properties" : {
+    },
+    "source_on_save" : false,
+    "type" : "r_source"
+}
