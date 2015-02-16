@@ -19,9 +19,10 @@ outList = vector("list", length=length(dataSheets))
 names(outList) = dataSheets
 dat = data.frame(NULL)
 for (i in 1:length(dataSheets)) {
-  RAs = substr(list.files(pattern=dataSheets[i]), nchar(dataSheets[i])+2, nchar(dataSheets[i])+3)
+  path = "./raw_data/"
+  RAs = substr(list.files(path = path, pattern=dataSheets[i]), nchar(dataSheets[i])+2, nchar(dataSheets[i])+3)
   for (j in 1:length(RAs)) {
-    fileName = paste("./data_files/", dataSheets[i], "_", RAs[j], ".xlsx", sep="")
+    fileName = paste(path, dataSheets[i], "_", RAs[j], ".xlsx", sep="")
     temp = read.xlsx(fileName, 1, stringsAsFactors=F)
     temp$Entrant = RAs[j]
     print(fileName); print(names(temp))
