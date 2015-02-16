@@ -1,8 +1,4 @@
 # TO DO: Check & discard subjects according to gameplay vars
-# NOTE: lots of data is STILL MISSING 
-# LOTS of distraction assignments not yet entered
-
-# (max distraction subno is 149, digit subject is 171, distract is 182??)
 
 # how do i aggregate all this data from this disparate spreadsheets?
 # closest I can think of is my loop below which retrieves for a filename
@@ -12,7 +8,7 @@
 #install.packages("xlsx")
 library(xlsx)
 
-dataSheets = c("Debrief", "digits", "Distraction_Assignment", "Note_sheet", 
+dataSheets = c("Debrief", "Distraction_Assignment", "Note_sheet", 
                "Post-Questionnaire", "Writing_Task_Evaluation")
 
 outList = vector("list", length=length(dataSheets))
@@ -37,7 +33,7 @@ for (i in 1:length(dataSheets)) {
 # fix subno name
 names(outList[[2]])[1] = "Subject"
 
-# checking for duplicates
+# checking for duplicates (e.g. two different subs entered w/ same ID)
 # Note that it is right that "digits" has frequent duplicates!
 for (i in 1:length(dataSheets)) {
   print(names(outList)[i])
@@ -47,82 +43,54 @@ for (i in 1:length(dataSheets)) {
 debrief = outList[[1]]
 debrief[debrief$Subject == 168,] # bad
 debrief = debrief[!(debrief$Subject %in% c("165 or 166?", "168")),] 
+# Gonna put thse back into list b/c I think that makes reshaping easier 
+outList[[1]] = debrief ###
 
-digits = outList[[2]]
-digits = digits[complete.cases(digits[,1:9]),]
-# need to average digit-ratios, inspect for enormous differences
-
-distract = outList[[3]]
-distract = distract[!(distract$Subject %in% c(168, 170, 203, 33)),]
+distract = outList[[2]]
+distract = distract[!(distract$Subject %in% c(168, 170, 203, 33)),] # ??? doesn't remove rows?
+distract = distract[!(distract$Subject == "165 or 167?"),]
 distract = distract[complete.cases(distract),]
+#
+outList[[2]] = distract ###
 
-notes = outList[[4]]
+notes = outList[[3]]
 notes[notes$Subject == 150,]
 notes = notes[-265,] # deleting duplicate row
+#
+outList[[3]] = notes ###
 
-postQ = outList[[5]]
+postQ = outList[[4]]
 
-eval = outList[[6]]
+eval = outList[[5]]
 eval = eval[!(eval$Subject %in% c(140, 63, 82)),]
+#
+outList[[5]] = eval ###
 
-# dat = data.frame(NULL)
-# names(dat) = c(names(notes), names(distract), names(postQ), 
-#                names(distract), names(digits), names(debrief), names(eval))
+# Bring in digits data, previously cleaned in 2d4d.R
+digits = read.delim("./cleaned_data/2d4d.txt")
+names(digits)[1] = "Subject"
+outList[[6]] = digits
+
+# Aggregate everything into a single huge spreadsheet
+require(reshape2)
+molten = melt(outList, id.var = "Subject")
+outDat = dcast(molten, Subject ~ ...)
+# If it's aggregating, you've done it wrong!
+
+outDat$Violence = ifelse(outDat$Condition_Note_sheet == 1 |
+                          outDat$Condition_Note_sheet == 2, "Violent", "Nonviolent")
+
+outDat$Difficulty = ifelse(outDat$Condition_Note_sheet == 2 |
+                             outDat$Condition_Note_sheet == 4, "Hard", "Easy")
+
+table(outDat$Condition_Note_sheet, outDat$Violence, outDat$Difficulty, useNA='always')
+
+# may tidy up column order here, make more columns, prettier names, etc.
+write.table(outDat, "./cleaned_data/aggregated_data.txt", sep="\t", row.names=F)
 
 
-digitsNew = data.frame(NULL)
-digitsNew$Subject = unique(digits$Subject)
-for (i in 2:9) {
-  temp = unique(digits$Subject)
-  digitsNew[,i] = tapply(digits[,i], digits$Subject, mean) # create averages
-  digitsNew[,i+10] = tapply(digits[,i], digits$Subject, diff) # create new column for storing diff
-}
-colnames(digitsNew)[12:19] = paste(colnames(digitsNew)[2:9], "diff", sep="_")
+# Gunk below from previous analysis script.
 
-setwd("C:/Dissertation/Analysis_02012014")
-distract = read.delim(file="distraction_assignment.txt")
-notes = read.delim(file="RA_notes.txt")
-digit = read.delim(file="2d4d.txt")
-
-colnames(distract)
-colnames(notes)
-class(distract$Subject)
-class(notes$Subject)
-
-barplot(table(notes$Subject))
-barplot(table(distract$Subject)) # some subjects in distract 2x
-barplot(table(digit$Subno))
-table(distract$Subject)[table(distract$Subject)>1] #subs 33, 170, 999
-distract[distract$Subject %in% c(33, 168, 170, 203,224,225, 999, 165167, 1681, 1682),] # well somebody fucked up
-# subjects 203, 224, and 225 seem fine though
-notes[notes$Subject %in% c(33, 168, 170, 999, 165, 167),] 
-# no RA notesheet on file for most of these. ugh.
-badsubs = c(33, 168, 170, 999, 165167, 1681, 1682)
-distract=subset(distract, !(distract$Subject %in% badsubs))
-distract2=distract[!(is.na(distract$Assignment) & distract$Subject %in% c(203, 224, 225)),]
-barplot(table(distract2$Subject))
-
-dat=data.frame(notes, 
-               "Violence"=factor("Chex Quest", levels=c("Chex Quest", "Brutal Doom")), 
-               "Difficulty"=factor("Easy", levels=c("Easy", "Hard")),
-               "DV"=NA, "L_2d4d"=NA, "R_2d4d"=NA)
-for (i in distract2$Subject) {
-  #declare indices for each data frame according to subject #
-  datIndex=(dat$Subject==i); disIndex=(distract2$Subject==i); 
-  #change dat values according to sub-frames values
-  dat$DV[datIndex]=distract2$Assignment[disIndex]
-}
-for (i in digit$Subno) {
-  #declare indices for each data frame according to subject #
-  datIndex=(dat$Subject==i); digIndex=(digit$Subno==i)
-  #change dat values according to sub-frames values
-  dat$L_2d4d[datIndex]=digit$L_2d4d[digIndex]
-  dat$R_2d4d[datIndex]=digit$R_2d4d[digIndex]
-}
-
-#assign brutal violence & hard difficulty
-dat$Violence[dat$Condition %in% c(1,2)] = "Brutal Doom"
-dat$Difficulty[dat$Condition %in% c(2,4)] = "Hard"
 # and as numerics for to check point-biserial correlations...
 dat$vioNum = 0; dat$vioNum[dat$Violence=="Brutal Doom"] = 1
 dat$diffNum = 0; dat$diffNum[dat$Difficulty=="Hard"] = 1
