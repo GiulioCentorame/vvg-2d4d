@@ -18,7 +18,13 @@ tay = tay[complete.cases(tay[,1:9]),]
 temp = unique(c(jul[,1], rac[,1], tay[,1]))
 table(temp %in% jul[,1], temp %in% rac[,1], temp %in% tay[,1])
 # jul & rac overlap, tay stands alone
-
+# some records are too exactly alike in jul and rac datasets
+temp = jul[,2:9] == rac[,2:9]
+temp = apply(temp, 1, FUN=mean)
+rac[as.logical(temp),1:9]
+# removing rac[1:49,], must've been copy-pasted from julian somehow
+# not sure what to make of 57, 59, 75, 108, 140, 142, 154
+rac = rac[-1:49,]
 # pairwise plots reveal rachel must have made some errors
 for (i in c(2,4,6,8)) plot(jul[,i], rac[,i])
 # rachel's errors: 77 84 148
@@ -75,7 +81,7 @@ dat = dcast(molten, Subno ~ ... , fun.aggregate=mean, na.rm=T)
 dat$julNotes = jul$Notes[match(dat$Subno, jul$Subno)]
 dat$racNotes = rac$Notes[match(dat$Subno, rac$Subno)]
 dat$tayNotes = tay$Notes[match(dat$Subno, tay$Subno)]
-# how many coded?
+# how many coded? # I must've forgotten something in here, this isn't working
 dat$nCoders = table(dat$Subno)
 # who coded?
 # dat$Coders = paste ###
