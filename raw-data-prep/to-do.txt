@@ -1,3 +1,13 @@
 It seems that IRR is higher than it should be -- many early subjects were not actually double-entered but instead have exactly the same marks in both julian's and rachel's datasets (extremely unlikely). I will need to ID rows that are perfectly identical and ask Rachel to do them again.
 
-Might not be a bad idea to use tapply(FUN=diff) or dcast(FUN=diff) to look for unusually discrepant codings.
+Might not be a bad idea to use tapply(FUN=diff) or dcast(FUN=diff) to look for unusually discrepant 2d4d codings.
+
+Fix these hideous column names
+
+Read through participant notes.
+Fix Date and Time encoding
+
+Consider rearranging directories, project files.
+
+Diagnose and fix data re-import issue when exporting at end of data_aggregation.R
+
