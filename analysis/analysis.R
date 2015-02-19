@@ -1,30 +1,45 @@
-dat = read.delim("./cleaned_data/aggregated_data.txt", 
+dat = read.delim("../raw-data-prep/cleaned_data/aggregated_data.txt", 
                #quote="", 
                sep="\t", 
                stringsAsFactors=F)
 
+# may wish to use column dat$Suspected_Debrief
+# dat$Game.play.affect.distraction.time_Debrief or dat$Surprise_Debrief
+# I probably ruined these questionnaires by having the RA attempt funneled debriefing and then
+  # give the questionnaire... But then, if the funneled debriefing didn't turn up anything,
+  # the paper questionnaire should be legit!
+# Maybe it's become impossible to collect any damn data in this area...
 
-goodDat = dat[]
+# how bad is it?
 
+table(dat$Suspected_Debrief, dat$Good.Session_Note_sheet)
+table(dat$Game.play.affect.distraction.time_Debrief, dat$Good.Session_Note_sheet)
+table(dat$Surprise_Debrief, dat$Good.Session_Note_sheet)
+table(dat$X1.a_Debrief, dat$Good.Session_Note_sheet)
+
+# People who guessed "effects of games on aggression" also made more guesses overall
+dat[149, 4:5] = 0; for (i in 2:6) dat[,i] = as.numeric(dat[,i])
+table(dat$X1.a_Debrief, apply(dat[,2:6], 1, FUN=sum, na.rm=T))
+
+# It looks like RA's decision of whether it was a good session or not
+  # had nothing to do with whether or not the subject listed vg & aggression or suspicion of DV
+
+dat1 = dat[dat$X1.a_Debrief == 0,]
+dat2 = dat[dat$Good.Session_Note_sheet != "No",]
 
 # Gunk below from previous analysis script.
 
 # and as numerics for to check point-biserial correlations...
-dat$vioNum = 0; dat$vioNum[dat$Violence=="Brutal Doom"] = 1
+dat$vioNum = 0; dat$vioNum[dat$Violence=="Violent"] = 1
 dat$diffNum = 0; dat$diffNum[dat$Difficulty=="Hard"] = 1
 #check 2d4d quality
-hist(dat$L_2d4d, breaks=15); hist(dat$R_2d4d, breaks=15)
+hist(dat$L2d4d, breaks=15); hist(dat$R2d4d, breaks=15)
 # i'm guessing that the one 2d4d at 1.15 is an error.
-dat$R_2d4d[dat$R_2d4d > 1.1] = NA # remove it
+dat$R2d4d[dat$R_2d4d > 1.1] = NA # remove it
 #okay that should do it
 colnames(dat)
-dat$Good.Session.[dat$Good.Session.=="Maybe "] = "Maybe"
-dat$Good.Session.[dat$Good.Session.=="Yes "] = "Yes"
-dat$Good.Session.[dat$Good.Session.=="No/Maybe "] = "Maybe"
-dat$Good.Session.[dat$Good.Session. %in% c("",".","N/A")] = "N/A" # this causes whole row to turn NA
 
-
-
+names(dat)[23] = "DV"
 hist(dat$DV); summary(dat$DV) # strong ceiling effect. 11 NAs? 
 # histograms w/ facet wraps for conditions
 require(ggplot2)
