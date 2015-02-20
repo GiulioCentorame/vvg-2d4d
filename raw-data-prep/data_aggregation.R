@@ -15,12 +15,13 @@ outList = vector("list", length=length(dataSheets))
 names(outList) = dataSheets
 dat = data.frame(NULL)
 for (i in 1:length(dataSheets)) {
-  path = "./raw_data/"
+  path = "./raw-data-prep/raw_data/"
   RAs = substr(list.files(path = path, pattern=dataSheets[i]), nchar(dataSheets[i])+2, nchar(dataSheets[i])+3)
   for (j in 1:length(RAs)) {
     fileName = paste(path, dataSheets[i], "_", RAs[j], ".xlsx", sep="")
     temp = read.xlsx(fileName, 1, stringsAsFactors=F)
     temp$Entrant = RAs[j]
+    names(temp)[ncol(temp)] = paste("Entrant", dataSheets[i], sep="-")
     print(fileName); print(names(temp))
     dat = rbind(dat, temp)
     # Save to an object with variable name
@@ -67,7 +68,7 @@ eval = eval[!(eval$Subject %in% c(140, 63, 82)),]
 outList[[5]] = eval ###
 
 # Bring in digits data, previously cleaned in 2d4d.R
-digits = read.delim("./cleaned_data/2d4d.txt")
+digits = read.delim("./raw-data-prep/cleaned_data/2d4d.txt", stringsAsFactors=F)
 names(digits)[1] = "Subject"
 outList[[6]] = digits
 
@@ -91,12 +92,21 @@ outDat$Difficulty = ifelse(outDat$Condition_Note_sheet == 2 |
 
 table(outDat$Condition_Note_sheet, outDat$Violence, outDat$Difficulty, useNA='always')
 
-# may tidy up column order here, make more columns, prettier names, etc.
+# make the names less awful
+for (i in 1:ncol(outDat)) names(outDat)[i] = strsplit(names(outDat), split="_", fixed=T)[[i]][1]
+names(outDat)[83:90] = names(digits)[4:11]
+
+# Straighten up odd entries in Good.Session. column
+outDat$Good.Session[outDat$Good.Session == "Maybe "] = "Maybe"
+outDat$Good.Session[outDat$Good.Session %in% c("yes", "Yes ")] = "Maybe"
+outDat$Good.Session[outDat$Good.Session %in% c("N/A", ".")] = NA
+outDat$Good.Session[outDat$Good.Session == "No/Maybe"] = "No"
+
 # version for browsing in Excel and reading feedback
-write.table(outDat, "./cleaned_data/aggregated_data_wNotes.txt", sep="\t", row.names=F)
+write.table(outDat, "./raw-data-prep/cleaned_data/aggregated_data_wNotes.txt", sep="\t", row.names=F)
 # All this ugly text data is ruining things so i'm making a smaller version for analysis
-noteCols = c("julNotes_", "racNotes_", "tayNotes_","Notes_Note_sheet","Why._Debrief")
+noteCols = c("julNotes", "racNotes", "tayNotes","Notes","Why.")
 outDat = outDat[,!(names(outDat) %in% noteCols)]
-write.table(outDat, "./cleaned_data/aggregated_data.txt", sep="\t", row.names=F)
+write.table(outDat, "./analysis/aggregated_data.txt", sep="\t", row.names=F)
 
 

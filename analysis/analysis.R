@@ -1,4 +1,4 @@
-dat = read.delim("../raw-data-prep/cleaned_data/aggregated_data.txt", 
+dat = read.delim("./analysis/aggregated_data.txt", 
                #quote="", 
                sep="\t", 
                stringsAsFactors=F)
@@ -12,7 +12,7 @@ dat = read.delim("../raw-data-prep/cleaned_data/aggregated_data.txt",
 
 # how bad is it?
 
-table(dat$Suspected_Debrief, dat$Good.Session_Note_sheet)
+table(dat$Suspected, dat$Good.Session)
 table(dat$Game.play.affect.distraction.time_Debrief, dat$Good.Session_Note_sheet)
 table(dat$Surprise_Debrief, dat$Good.Session_Note_sheet)
 table(dat$X1.a_Debrief, dat$Good.Session_Note_sheet)
@@ -29,56 +29,54 @@ dat2 = dat[dat$Good.Session_Note_sheet != "No",]
 
 # Gunk below from previous analysis script.
 
-# and as numerics for to check point-biserial correlations...
+# and as numerics to check point-biserial correlations...
 dat$vioNum = 0; dat$vioNum[dat$Violence=="Violent"] = 1
 dat$diffNum = 0; dat$diffNum[dat$Difficulty=="Hard"] = 1
 #check 2d4d quality
 hist(dat$L2d4d, breaks=15); hist(dat$R2d4d, breaks=15)
 # i'm guessing that the one 2d4d at 1.15 is an error.
-dat$R2d4d[dat$R_2d4d > 1.1] = NA # remove it
+dat$R2d4d[dat$R2d4d > 1.1] = NA # remove it
 #okay that should do it
 colnames(dat)
 
-names(dat)[23] = "DV"
+names(dat)[grep("Assignment", names(dat))] = "DV"
 hist(dat$DV); summary(dat$DV) # strong ceiling effect. 11 NAs? 
 # histograms w/ facet wraps for conditions
 require(ggplot2)
 ggplot(dat, aes(x=DV)) + 
   geom_histogram(breaks=c(1:9)) +
-  facet_wrap(~Good.Session., nrow=2)
-hist(dat$DV[dat$Good.Session. == "Yes"]); summary(dat$DV[dat$Good.Session. == "Yes"])
-hist(dat$DV[dat$Good.Session. == "No"], breaks=9); summary(dat$DV[dat$Good.Session. == "No"])
-hist(dat$DV[dat$Good.Session. == "Maybe"], breaks=9); summary(dat$DV[dat$Good.Session. == "Maybe"])
+  facet_wrap(~Good.Session, nrow=2)
+hist(dat$DV[dat$Good.Session == "Yes"]); summary(dat$DV[dat$Good.Session == "Yes"])
+hist(dat$DV[dat$Good.Session == "No"], breaks=9); summary(dat$DV[dat$Good.Session == "No"])
+hist(dat$DV[dat$Good.Session == "Maybe"], breaks=9); summary(dat$DV[dat$Good.Session == "Maybe"])
 
-good = dat[dat$Good.Session.=="Yes",]
-maybe = dat[dat$Good.Session.%in%c("Yes","Maybe"),]
-
-factorList = c("RA", "Subject", "Station","Condition")
-dat$Station = as.factor(dat$Station)
-dat$Condition = as.factor(dat$Condition)
+factorList = c("RA", "Subject", "Station","Condition", "Violence", "Difficulty")
+for (i in factorList) dat[,i] = as.factor(dat[,i])
 
 # let's go straight to the good stuff
-set = good # could be "good" "maybe" or "dat"
-set$R_2d4d[set$R_2d4d > 1.1] = NA # R_2d4d outlier removal
+set = dat # could be "dat", "dat1", "dat2", etc
 
-cor(set[,c("vioNum", "diffNum", "L_2d4d", "R_2d4d")], use="pairwise.complete.obs") # random assignment good
+set = set[!(is.na(set$Violence) | is.na(set$Difficulty) | is.na(set$DV)),]
+set$R2d4d[set$R2d4d > 1.1] = NA # R2d4d outlier removal
+
+cor(set[,c("vioNum", "diffNum", "L2d4d", "R2d4d")], use="pairwise.complete.obs") # random assignment good
 
 require(car)
 # 3-way w/ left hand. 
 #sink(file="ANOVA_results.txt", split=T)
-m1 = lm(DV ~ Difficulty * Violence * L_2d4d, data=set)
+m1 = lm(DV ~ Difficulty * Violence * L2d4d, data=set)
 summary(m1); Anova(m1, type=3)
 # 3-way w/ right hand
-m2 = lm(DV ~ Difficulty * Violence * R_2d4d, data=set)
+m2 = lm(DV ~ Difficulty * Violence * R2d4d, data=set)
 summary(m2); Anova(m2, type=3)
 # 2-ways, dropping 2d4d & 3-ways.
 m3 = lm(DV ~ Difficulty * Violence, data=set)
 summary(m3); Anova(m3, type=3)
 #sink()
 # 2d4d?
-m4 = lm(DV ~ L_2d4d, data=set)
+m4 = lm(DV ~ L2d4d, data=set)
 summary(m4)
-m5 = lm(DV ~ R_2d4d, data=set)
+m5 = lm(DV ~ R2d4d, data=set)
 summary(m5)
 # compare vs no-violence model?
 m6 = lm(DV ~ Difficulty + Violence, data=set)
@@ -90,10 +88,10 @@ m9 = lm(DV ~ 1, data=set)
 require(censReg)
 # 3-way with left hand
 #sink("Censored-from-above_results.txt")
-censModel1 = censReg(DV ~ Difficulty*Violence*L_2d4d, left=1, right=9, data=set)
+censModel1 = censReg(DV ~ Difficulty*Violence*L2d4d, left=1, right=9, data=set)
 summary(censModel1)
 # 3-way w/ right hand
-censModel2 = censReg(DV ~ Difficulty*Violence*R_2d4d, left=1, right=9, data=set)
+censModel2 = censReg(DV ~ Difficulty*Violence*R2d4d, left=1, right=9, data=set)
 summary(censModel2)
 # 2-ways, dropping 2d4d & 3-ways
 censModel3 = censReg(DV ~ Difficulty*Violence, left=1, right=9, data=set)
@@ -107,14 +105,14 @@ set$DVbin=NA
 set$DVbin[set$DV==9] = 1
 set$DVbin[set$DV<9] = 0
 #sink("Binomial_results.txt", split=T)
-model1 = glm(DVbin ~ Difficulty*Violence*L_2d4d, family=binomial(link="logit"), data=set)
+model1 = glm(DVbin ~ Difficulty*Violence*L2d4d, family=binomial(link="logit"), data=set)
 summary(model1)
-model2 = glm(DVbin ~ Difficulty*Violence*R_2d4d, family=binomial(link="logit"), data=set)
+model2 = glm(DVbin ~ Difficulty*Violence*R2d4d, family=binomial(link="logit"), data=set)
 summary(model2)
 model3 = glm(DVbin ~ Difficulty*Violence, family=binomial, data=set)
 summary(model3)
-model4 = glm(DVbin ~ L_2d4d, family=binomial, data=set)
-model5 = glm(DVbin ~ R_2d4d, family=binomial, data=set)
+model4 = glm(DVbin ~ L2d4d, family=binomial, data=set)
+model5 = glm(DVbin ~ R2d4d, family=binomial, data=set)
 model6 = glm(DVbin ~ Difficulty + Violence, family=binomial, data=set)
 model7 = glm(DVbin ~ Difficulty, family=binomial, data=set)
 model8 = glm(DVbin ~ Violence, family=binomial, data=set)
@@ -137,8 +135,8 @@ qplot(data=set, x=interaction(set$Violence, set$Difficulty), y=DV, notch=T, geom
 qplot(data=set, x=interaction(set$Violence, set$Difficulty), y=DV, notch=T, geom="point"
       ,position=position_jitter(w=.25, h=.1), cex=2, alpha=.9
       ,xlab = "Condition assigned", ylab="Aggression")
-qplot(data=set, x=L_2d4d, y=DV, col=Violence, geom=c("point", "smooth"))
-qplot(data=set, x=R_2d4d, y=DV, col=Violence, geom=c("point", "smooth"))
+qplot(data=set, x=L2d4d, y=DV, col=Violence, geom=c("point", "smooth"))
+qplot(data=set, x=R2d4d, y=DV, col=Violence, geom=c("point", "smooth"))
 
 # the best of the best:
 postertext = theme(text = element_text(size=16),
@@ -148,7 +146,7 @@ postertext = theme(text = element_text(size=16),
 )
 
 # scatterplot w/ left-hand 2d4d:
-ggplot(data=set, aes(x=L_2d4d, y=DV, col=Violence)) +
+ggplot(data=set, aes(x=L2d4d, y=DV, col=Violence)) +
   geom_point(cex=4, alpha=.8, position=position_jitter(height=.1)) +
   geom_smooth(method="lm")+
   labs(title="Does prenatal testosterone interact with game violence?") +
@@ -164,7 +162,7 @@ ggplot(data=set, aes(x=L_2d4d, y=DV, col=Violence)) +
   )
 
 # scatterplot w/ right-hand 2d4d:
-ggplot(data=set, aes(x=R_2d4d, y=DV, col=Violence)) +
+ggplot(data=set, aes(x=R2d4d, y=DV, col=Violence)) +
   geom_point(cex=4, alpha=.8, position=position_jitter(height=.1)) +
   geom_smooth(method="lm")+
   labs(title="Does prenatal testosterone interact with game violence?") +
@@ -181,7 +179,7 @@ theme(panel.background=element_blank(),
 )
 
 # scatterplot w/ right-hand 2d4d:
-ggplot(data=set, aes(x=R_2d4d, y=DV)) +
+ggplot(data=set, aes(x=R2d4d, y=DV)) +
   geom_point(cex=4, alpha=.75) +
   geom_smooth(method="lm")+
   labs(title="Null effects of 2d4d ratio (right hand)") +
@@ -200,7 +198,7 @@ ggplot(data=set, aes(x=R_2d4d, y=DV)) +
 #         )
 
 # scatterplot w/ left-hand 2d4d:
-ggplot(data=set, aes(x=L_2d4d, y=DV)) +
+ggplot(data=set, aes(x=L2d4d, y=DV)) +
   geom_point(cex=4, alpha=.75) +
   geom_smooth(method="lm")+
   labs(title="Null effects of 2d4d ratio (left hand)") +
@@ -236,14 +234,14 @@ ggplot(data=set, aes(x=interaction(set$Violence, set$Difficulty), y=DV)) +
   ylab("Coldpressor duration assigned (level)")
 
 
-ggplot(data=set, aes(x=L_2d4d, y=DV, col=Violence)) +
+ggplot(data=set, aes(x=L2d4d, y=DV, col=Violence)) +
   geom_point() +
   geom_smooth(method="lm")+
   labs(title="Does prenatal testosterone interact with game violence?") +
   xlab("Left 2d4d ratio \n Smaller ratio implies greater testosterone") +
   ylab("Coldpressor duration assigned (aggression)")
 
-ggplot(data=set, aes(x=R_2d4d, y=DV, col=Difficulty)) +
+ggplot(data=set, aes(x=R2d4d, y=DV, col=Difficulty)) +
   geom_point() +
   geom_smooth(method="lm")+
   labs(title="Does prenatal testosterone interact with game difficulty?") +
@@ -253,14 +251,12 @@ ggplot(data=set, aes(x=R_2d4d, y=DV, col=Difficulty)) +
 
 require(BayesFactor)
 
-dat1=dat[!is.na(dat$DV),]
-good1=good[!is.na(good$DV),]
-bf1 = anovaBF(DV ~ Violence*Difficulty, data=dat1, rscaleFixed=.21, iterations=10^5)
-bf2 = anovaBF(DV ~ Violence*Difficulty, data=good1, rscaleFixed=.21, iterations=10^5)
-bf3 = lmBF(DV ~ Violence*Difficulty*L_2d4d, data=good1[!is.na(good1$L_2d4d),], rscaleFixed=.21, iterations=10^5)
-bf4 = lmBF(DV ~ Violence*Difficulty*R_2d4d, data=good1[!is.na(good1$R_2d4d),], rscaleFixed=.21, iterations=10^5)
-bf5 = lmBF(DV ~ L_2d4d, data=good1[!is.na(good1$L_2d4d),], rscaleFixed=.21, iterations=10^5)
-bf6 = lmBF(DV ~ R_2d4d, data=good1[!is.na(good1$R_2d4d),], rscaleFixed=.21, iterations=10^5)
+bf1 = anovaBF(DV ~ Violence*Difficulty, data=set, rscaleFixed=.4, iterations=10^5)
+# bf2 = anovaBF(DV ~ Violence*Difficulty, data=good1, rscaleFixed=.21, iterations=10^5)
+bf3 = lmBF(DV ~ Violence*Difficulty*L2d4d, data=set[!is.na(set$L2d4d),], rscaleFixed=.4, iterations=10^5)
+bf4 = lmBF(DV ~ Violence*Difficulty*R2d4d, data=set[!is.na(set$R2d4d),], rscaleFixed=.4, iterations=10^5)
+bf5 = lmBF(DV ~ L2d4d, data=set[!is.na(set$L2d4d),], rscaleFixed=.4, iterations=10^5)
+bf6 = lmBF(DV ~ R2d4d, data=set[!is.na(set$R2d4d),], rscaleFixed=.4, iterations=10^5)
 
 
 bf1
