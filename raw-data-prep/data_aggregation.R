@@ -102,6 +102,14 @@ outDat$Good.Session[outDat$Good.Session %in% c("yes", "Yes ")] = "Maybe"
 outDat$Good.Session[outDat$Good.Session %in% c("N/A", ".")] = NA
 outDat$Good.Session[outDat$Good.Session == "No/Maybe"] = "No"
 
+# ditto dat$Game.play.affect.distraction.time
+outDat$Game.play.affect.distraction.time[outDat$Game.play.affect.distraction.time %in% c(
+  "mabye", "Mabye", "maybe")] = "Maybe"
+outDat$Game.play.affect.distraction.time[outDat$Game.play.affect.distraction.time %in% c(
+  "nno", "no", "No ", "no ")] = "No"
+outDat$Game.play.affect.distraction.time[outDat$Game.play.affect.distraction.time %in% c(
+  "yes", "Yes ")] = "Yes"
+
 # version for browsing in Excel and reading feedback
 write.table(outDat, "./raw-data-prep/cleaned_data/aggregated_data_wNotes.txt", sep="\t", row.names=F)
 # All this ugly text data is ruining things so i'm making a smaller version for analysis

@@ -1,4 +1,4 @@
-install.packages('car', 'reshape2', 'xlsx', 'BayesFactor', 'rms')
+#install.packages(c('car', 'reshape2', 'xlsx', 'BayesFactor', 'rms'))
 
 source("./raw-data-prep/2d4d.R")
 source("./raw-data-prep/data_aggregation.R")

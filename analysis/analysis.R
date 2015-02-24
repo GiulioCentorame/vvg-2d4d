@@ -13,21 +13,19 @@ dat = read.delim("./analysis/aggregated_data.txt",
 # how bad is it?
 
 table(dat$Suspected, dat$Good.Session)
-table(dat$Game.play.affect.distraction.time_Debrief, dat$Good.Session_Note_sheet)
-table(dat$Surprise_Debrief, dat$Good.Session_Note_sheet)
-table(dat$X1.a_Debrief, dat$Good.Session_Note_sheet)
+table(dat$Game.play.affect.distraction.time, dat$Good.Session)
+table(dat$Surprise, dat$Good.Session)
+table(dat$X1.a, dat$Good.Session)
 
 # People who guessed "effects of games on aggression" also made more guesses overall
 dat[149, 4:5] = 0; for (i in 2:6) dat[,i] = as.numeric(dat[,i])
-table(dat$X1.a_Debrief, apply(dat[,2:6], 1, FUN=sum, na.rm=T))
+table(dat$X1.a, apply(dat[,2:6], 1, FUN=sum, na.rm=T))
+# could make a note of those participants who marked X1.a and only X1.a
+filter3 = dat$X1.a == 1 & !(dat$X1.b == 1 | dat$X1.c == 1 | dat$X1.d == 1 | dat$X1.e == 1)
 
 # It looks like RA's decision of whether it was a good session or not
   # had nothing to do with whether or not the subject listed vg & aggression or suspicion of DV
 
-dat1 = dat[dat$X1.a_Debrief == 0,]
-dat2 = dat[dat$Good.Session_Note_sheet != "No",]
-
-# Gunk below from previous analysis script.
 
 # and as numerics to check point-biserial correlations...
 dat$vioNum = 0; dat$vioNum[dat$Violence=="Violent"] = 1
@@ -54,7 +52,10 @@ factorList = c("RA", "Subject", "Station","Condition", "Violence", "Difficulty")
 for (i in factorList) dat[,i] = as.factor(dat[,i])
 
 # let's go straight to the good stuff
-set = dat # could be "dat", "dat1", "dat2", etc
+
+dat1 = dat[dat$X1.a == 0,]
+dat2 = dat[dat$Good.Session != "No",]
+set = dat2 # could be "dat", "dat1", "dat2", etc
 
 set = set[!(is.na(set$Violence) | is.na(set$Difficulty) | is.na(set$DV)),]
 set$R2d4d[set$R2d4d > 1.1] = NA # R2d4d outlier removal
@@ -196,6 +197,7 @@ ggplot(data=set, aes(x=R2d4d, y=DV)) +
 #         axis.title.y=element_text(vjust=.2),
 #         axis.title.x=element_text(vjust=.5)
 #         )
+ggsave("r2d4d_x_violence.png", width=14, height=10, units="in")
 
 # scatterplot w/ left-hand 2d4d:
 ggplot(data=set, aes(x=L2d4d, y=DV)) +
@@ -257,7 +259,8 @@ bf3 = lmBF(DV ~ Violence*Difficulty*L2d4d, data=set[!is.na(set$L2d4d),], rscaleF
 bf4 = lmBF(DV ~ Violence*Difficulty*R2d4d, data=set[!is.na(set$R2d4d),], rscaleFixed=.4, iterations=10^5)
 bf5 = lmBF(DV ~ L2d4d, data=set[!is.na(set$L2d4d),], rscaleFixed=.4, iterations=10^5)
 bf6 = lmBF(DV ~ R2d4d, data=set[!is.na(set$R2d4d),], rscaleFixed=.4, iterations=10^5)
-
+#names(bf1)$numerator=c("Violence", "Interactive", "Difficulty", "Additive")
+plot(bf1)
 
 bf1
 bf2
