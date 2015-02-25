@@ -55,6 +55,7 @@ for (i in factorList) dat[,i] = as.factor(dat[,i])
 
 dat1 = dat[dat$X1.a == 0,]
 dat2 = dat[dat$Good.Session != "No",]
+dat3 = dat[dat$Good.Session != "No" & !filter3,]
 set = dat2 # could be "dat", "dat1", "dat2", etc
 
 set = set[!(is.na(set$Violence) | is.na(set$Difficulty) | is.na(set$DV)),]
