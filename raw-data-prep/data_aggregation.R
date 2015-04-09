@@ -16,7 +16,11 @@ names(outList) = dataSheets
 dat = data.frame(NULL)
 for (i in 1:length(dataSheets)) {
   path = "./raw-data-prep/raw_data/"
-  RAs = substr(list.files(path = path, pattern=dataSheets[i]), nchar(dataSheets[i])+2, nchar(dataSheets[i])+3)
+  RAs = substr(
+    list.files(path = path, 
+               pattern=dataSheets[i]), 
+    nchar(dataSheets[i])+2, 
+    nchar(dataSheets[i])+3)
   for (j in 1:length(RAs)) {
     fileName = paste(path, dataSheets[i], "_", RAs[j], ".xlsx", sep="")
     temp = read.xlsx(fileName, 1, stringsAsFactors=F)
@@ -50,6 +54,7 @@ outList[[1]] = debrief ###
 distract = outList[[2]]
 distract = distract[!(distract$Subject %in% c(168, 170, 203, 33)),] # ??? doesn't remove rows?
 distract = distract[!(distract$Subject == "165 or 167?"),]
+distract = distract[!(distract$Subject %in% 224:225) & is.na(distract$Assignment)]
 distract = distract[complete.cases(distract),]
 #
 outList[[2]] = distract ###
@@ -81,7 +86,7 @@ outDat = dcast(molten, Subject ~ ...)
 # I really must fix the column names before I write more code.
 
 # Fix up some misc data entry screwups
-dat$Good.Session_Note_sheet[]
+#dat$Good.Session_Note_sheet[]
 
 # assign factor codes based on condition
 outDat$Violence = ifelse(outDat$Condition_Note_sheet == 1 |
