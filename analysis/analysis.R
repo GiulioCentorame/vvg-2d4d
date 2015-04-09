@@ -1,7 +1,24 @@
+require(dplyr)
+require(magrittr)
+
 dat = read.delim("./analysis/aggregated_data.txt", 
                #quote="", 
                sep="\t", 
                stringsAsFactors=F)
+
+# Make sure no one took damage in easy condition
+table(dat$Game.6, dat$Difficulty)
+dat %>%
+  filter(Difficulty == "Easy", Game.1 > 0) %>%
+  select(Subject)
+
+# Big list of possible subject exclusion filters
+dat.pure =
+  dat %>%
+  filter(!(Difficulty == "Easy" & Game.1 > 0)) %>% # died in easy-game condition
+  filter(!(Difficulty == "Easy" & Game.6 > 0)) %>% # took damage in easy-game condition
+  filter(!(X1.a == 1 & (X1.b != 1 | X1.c !=1 | X1.d != 1 | X1.e != 1)))  %>% # called hypothesis w/o wrong guesses
+  filter(Good.Session != "No") # RAs didn't think session went well
 
 # may wish to use column dat$Suspected_Debrief
 # dat$Game.play.affect.distraction.time_Debrief or dat$Surprise_Debrief
