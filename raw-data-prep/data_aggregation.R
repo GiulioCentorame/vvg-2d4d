@@ -25,7 +25,7 @@ for (i in 1:length(dataSheets)) {
     fileName = paste(path, dataSheets[i], "_", RAs[j], ".xlsx", sep="")
     temp = read.xlsx(fileName, 1, stringsAsFactors=F)
     temp$Entrant = RAs[j]
-    names(temp)[ncol(temp)] = paste("Entrant", dataSheets[i], sep="-")
+    names(temp)[ncol(temp)] = paste("Entrant", dataSheets[i], sep="_")
     print(fileName); print(names(temp))
     dat = rbind(dat, temp)
     # Save to an object with variable name
@@ -54,14 +54,15 @@ outList[[1]] = debrief ###
 distract = outList[[2]]
 distract = distract[!(distract$Subject %in% c(168, 170, 203, 33)),] # ??? doesn't remove rows?
 distract = distract[!(distract$Subject == "165 or 167?"),]
-distract = distract[!(distract$Subject %in% 224:225) & is.na(distract$Assignment)]
 distract = distract[complete.cases(distract),]
 #
 outList[[2]] = distract ###
 
 notes = outList[[3]]
-notes[notes$Subject == 150,]
-notes = notes[-265,] # deleting duplicate row
+notes[notes$Subject == 150,] # double-entered by AM and TH
+notes = notes[!(notes$Subject == 150 & notes$Entrant_Note_sheet == "TH"),] # deleting duplicate row
+notes[notes$Subject == 150,] # double-entered by AM and TH
+
 #
 outList[[3]] = notes ###
 
@@ -82,6 +83,7 @@ require(reshape2)
 molten = melt(outList, id.var = "Subject")
 outDat = dcast(molten, Subject ~ ...)
 # If it's aggregating, you've done it wrong!
+# use t = table(molten$Subject, molten$variable); which(t > 1, arr.ind=T); rownames() to debug 
 
 # I really must fix the column names before I write more code.
 

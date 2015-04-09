@@ -5,6 +5,9 @@ dat = read.delim("./analysis/aggregated_data.txt",
                #quote="", 
                sep="\t", 
                stringsAsFactors=F)
+names(dat)[names(dat)=="Assignment"] = "DV"
+factorList = c("RA", "Subject", "Station","Condition", "Violence", "Difficulty")
+for (i in factorList) dat[,i] = as.factor(dat[,i])
 
 # Make sure no one took damage in easy condition
 table(dat$Game.6, dat$Difficulty)
@@ -17,7 +20,7 @@ dat.pure =
   dat %>%
   filter(!(Difficulty == "Easy" & Game.1 > 0)) %>% # died in easy-game condition
   filter(!(Difficulty == "Easy" & Game.6 > 0)) %>% # took damage in easy-game condition
-  filter(!(X1.a == 1 & (X1.b != 1 | X1.c !=1 | X1.d != 1 | X1.e != 1)))  %>% # called hypothesis w/o wrong guesses
+  filter(is.na(X1.a) | !(X1.a == 1 & (X1.b == 0 & X1.c == 0 & X1.d == 0 & X1.e == 0)))  %>% # called hypothesis w/o wrong guesses
   filter(Good.Session != "No") # RAs didn't think session went well
 
 # may wish to use column dat$Suspected_Debrief
@@ -27,26 +30,13 @@ dat.pure =
   # the paper questionnaire should be legit!
 # Maybe it's become impossible to collect any damn data in this area...
 
-# how bad is it?
-
-table(dat$Suspected, dat$Good.Session)
-table(dat$Game.play.affect.distraction.time, dat$Good.Session)
-table(dat$Surprise, dat$Good.Session)
-table(dat$X1.a, dat$Good.Session)
-
-# People who guessed "effects of games on aggression" also made more guesses overall
-dat[149, 4:5] = 0; for (i in 2:6) dat[,i] = as.numeric(dat[,i])
-table(dat$X1.a, apply(dat[,2:6], 1, FUN=sum, na.rm=T))
-# could make a note of those participants who marked X1.a and only X1.a
-filter3 = dat$X1.a == 1 & !(dat$X1.b == 1 | dat$X1.c == 1 | dat$X1.d == 1 | dat$X1.e == 1)
-
 # It looks like RA's decision of whether it was a good session or not
   # had nothing to do with whether or not the subject listed vg & aggression or suspicion of DV
-
 
 # and as numerics to check point-biserial correlations...
 dat$vioNum = 0; dat$vioNum[dat$Violence=="Violent"] = 1
 dat$diffNum = 0; dat$diffNum[dat$Difficulty=="Hard"] = 1
+cor(dat[,c("vioNum", "diffNum", "L2d4d", "R2d4d")], use="pairwise.complete.obs") # random assignment good
 #check 2d4d quality
 hist(dat$L2d4d, breaks=15); hist(dat$R2d4d, breaks=15)
 # i'm guessing that the one 2d4d at 1.15 is an error.
@@ -54,31 +44,24 @@ dat$R2d4d[dat$R2d4d > 1.1] = NA # remove it
 #okay that should do it
 colnames(dat)
 
-names(dat)[grep("Assignment", names(dat))] = "DV"
 hist(dat$DV); summary(dat$DV) # strong ceiling effect. 11 NAs? 
 # histograms w/ facet wraps for conditions
 require(ggplot2)
-ggplot(dat, aes(x=DV)) + 
+ggplot(dat.pure, aes(x=DV)) + 
   geom_histogram(breaks=c(1:9)) +
-  facet_wrap(~Good.Session, nrow=2)
-hist(dat$DV[dat$Good.Session == "Yes"]); summary(dat$DV[dat$Good.Session == "Yes"])
-hist(dat$DV[dat$Good.Session == "No"], breaks=9); summary(dat$DV[dat$Good.Session == "No"])
-hist(dat$DV[dat$Good.Session == "Maybe"], breaks=9); summary(dat$DV[dat$Good.Session == "Maybe"])
+  facet_wrap(~Violence+Difficulty, nrow=2)
 
-factorList = c("RA", "Subject", "Station","Condition", "Violence", "Difficulty")
-for (i in factorList) dat[,i] = as.factor(dat[,i])
 
 # let's go straight to the good stuff
 
-dat1 = dat[dat$X1.a == 0,]
-dat2 = dat[dat$Good.Session != "No",]
-dat3 = dat[dat$Good.Session != "No" & !filter3,]
-set = dat2 # could be "dat", "dat1", "dat2", etc
+# dat1 = dat[dat$X1.a == 0,]
+# dat2 = dat[dat$Good.Session != "No",]
+# dat3 = dat[dat$Good.Session != "No" & !filter3,]
+set = dat.pure # could be "dat", "dat1", "dat2", etc
 
 set = set[!(is.na(set$Violence) | is.na(set$Difficulty) | is.na(set$DV)),]
 set$R2d4d[set$R2d4d > 1.1] = NA # R2d4d outlier removal
 
-cor(set[,c("vioNum", "diffNum", "L2d4d", "R2d4d")], use="pairwise.complete.obs") # random assignment good
 
 require(car)
 # 3-way w/ left hand. 
@@ -142,6 +125,28 @@ model6a = lrm(DVbin ~ Difficulty + Violence, data=set)
 model7a = lrm(DVbin ~ Difficulty, data=set)
 model8a = lrm(DVbin ~ Violence, data=set)
 model9a = lrm(DVbin ~ 1, data=set)
+
+## Bayesian Analysis
+require(BayesFactor)
+
+bf1 = anovaBF(DV ~ Violence*Difficulty, data=set, rscaleFixed=.4, iterations=10^5)
+bf3 = lmBF(DV ~ Violence*Difficulty*L2d4d, data=set[!is.na(set$L2d4d),], rscaleFixed=.4, iterations=10^5)
+bf4 = lmBF(DV ~ Violence*Difficulty*R2d4d, data=set[!is.na(set$R2d4d),], rscaleFixed=.4, iterations=10^5)
+bf5 = lmBF(DV ~ L2d4d, data=set[!is.na(set$L2d4d),], rscaleFixed=.4, iterations=10^5)
+bf6 = lmBF(DV ~ R2d4d, data=set[!is.na(set$R2d4d),], rscaleFixed=.4, iterations=10^5)
+#names(bf1)$numerator=c("Violence", "Interactive", "Difficulty", "Additive")
+plot(bf1)
+
+1/bf1
+1/bf3
+1/bf4
+1/bf5
+1/bf6
+
+anovaBF(DV ~ Violence*Difficulty, data=dat1, iterations=10^5)
+anovaBF(DV ~ Violence*Difficulty, data=good1, iterations=10^5)
+
+
 
 # consider using confint()
 
@@ -276,26 +281,6 @@ ggplot(data=set, aes(x=R2d4d, y=DV, col=Difficulty)) +
   ylab("Coldpressor duration assigned (aggression)")
 
 
-require(BayesFactor)
-
-bf1 = anovaBF(DV ~ Violence*Difficulty, data=set, rscaleFixed=.4, iterations=10^5)
-# bf2 = anovaBF(DV ~ Violence*Difficulty, data=good1, rscaleFixed=.21, iterations=10^5)
-bf3 = lmBF(DV ~ Violence*Difficulty*L2d4d, data=set[!is.na(set$L2d4d),], rscaleFixed=.4, iterations=10^5)
-bf4 = lmBF(DV ~ Violence*Difficulty*R2d4d, data=set[!is.na(set$R2d4d),], rscaleFixed=.4, iterations=10^5)
-bf5 = lmBF(DV ~ L2d4d, data=set[!is.na(set$L2d4d),], rscaleFixed=.4, iterations=10^5)
-bf6 = lmBF(DV ~ R2d4d, data=set[!is.na(set$R2d4d),], rscaleFixed=.4, iterations=10^5)
-#names(bf1)$numerator=c("Violence", "Interactive", "Difficulty", "Additive")
-plot(bf1)
-
-bf1
-bf2
-bf3
-bf4
-bf5
-bf6
-
-anovaBF(DV ~ Violence*Difficulty, data=dat1, iterations=10^5)
-anovaBF(DV ~ Violence*Difficulty, data=good1, iterations=10^5)
 
 # inspect the shape of these dang ol' priors
 r = seq(-1,1,.01)
