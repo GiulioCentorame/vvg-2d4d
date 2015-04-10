@@ -31,6 +31,15 @@ rac[rac$Subno %in% bad,2:9] = NA
 rac$L_index_length[rac$L_index_length < 100] = NA
 rac$R_index_length[rac$R_index_length < 100] = NA
 
+# IRR?
+icc = data.frame("Subno" = 1:450)
+names(rac) = paste(names(rac), "_R", sep="")
+names(tay) = paste(names(tay), "_T", sep="")
+icc = cbind(icc, jul[match(icc$Subno, jul$Subno),2:9])
+icc = cbind(icc, rac[match(icc$Subno, rac$Subno),2:9])
+icc = cbind(icc, tay[match(icc$Subno, tay$Subno),2:9])
+cor(icc[,-1], use="pairwise.complete")
+
 # Create averages
 require(reshape2)
 dat = rbind(jul, rac, tay); 

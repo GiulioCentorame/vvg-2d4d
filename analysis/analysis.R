@@ -18,10 +18,11 @@ dat %>%
 # Big list of possible subject exclusion filters
 dat.pure =
   dat %>%
-  filter(!(Difficulty == "Easy" & Game.1 > 0)) %>% # died in easy-game condition
-  filter(!(Difficulty == "Easy" & Game.6 > 0)) %>% # took damage in easy-game condition
+  filter(!is.na(DV), !is.na(Violence), !is.na(Difficulty)) %>%
+  filter(is.na(Game.1) | !(Difficulty == "Easy" & Game.1 > 0)) %>% # died in easy-game condition
+  filter(is.na(Game.6) | !(Difficulty == "Easy" & Game.6 > 0)) %>% # took damage in easy-game condition
   filter(is.na(X1.a) | !(X1.a == 1 & (X1.b == 0 & X1.c == 0 & X1.d == 0 & X1.e == 0)))  %>% # called hypothesis w/o wrong guesses
-  filter(Good.Session != "No") # RAs didn't think session went well
+  filter(is.na(Good.Session) | Good.Session != "No") # RAs didn't think session went well
 
 # may wish to use column dat$Suspected_Debrief
 # dat$Game.play.affect.distraction.time_Debrief or dat$Surprise_Debrief
@@ -49,7 +50,17 @@ hist(dat$DV); summary(dat$DV) # strong ceiling effect. 11 NAs?
 require(ggplot2)
 ggplot(dat.pure, aes(x=DV)) + 
   geom_histogram(breaks=c(1:9)) +
-  facet_wrap(~Violence+Difficulty, nrow=2)
+  facet_wrap(~Violence+Difficulty, nrow=2) +
+  scale_x_continuous("Coldpressor Assignment")
+
+
+# Manipulation check
+dat.pure$violence = as.numeric(dat.pure$violence)
+check1 = aov(violence ~ Violence, data=dat.pure)
+summary(check1)
+
+for (i in 34:39) dat.pure[,i] = as.numeric(dat.pure[,i])
+apply(dat.pure[,34:39], 2, mean, na.rm=T)
 
 
 # let's go straight to the good stuff
@@ -74,7 +85,17 @@ summary(m2); Anova(m2, type=3)
 # 2-ways, dropping 2d4d & 3-ways.
 m3 = lm(DV ~ Difficulty * Violence, data=set)
 summary(m3); Anova(m3, type=3)
-#sink()
+# elaboration via simple slopes:
+m3.1 = lm(DV ~ Violence, data=set[set$Difficulty == "Easy",])
+m3.2 = lm(DV ~ Violence, data=set[set$Difficulty == "Hard",])
+summary(m3.1)
+t2R(2.101, 111)
+summary(m3.2)
+t2R(-1.05, 112)
+# main effects w/ interaction in
+t2R(2.193, 223) # difficulty
+t2R(2.044, 223) # Violence
+
 # 2d4d?
 m4 = lm(DV ~ L2d4d, data=set)
 summary(m4)
@@ -82,49 +103,13 @@ m5 = lm(DV ~ R2d4d, data=set)
 summary(m5)
 # compare vs no-violence model?
 m6 = lm(DV ~ Difficulty + Violence, data=set)
+summary(m6)
+# effect sizes in additive model?
+t2R(.887, 223) # difficulty
+t2R(.673, 223) # Violence
 m7 = lm(DV ~ Difficulty, data=set)
 m8 = lm(DV ~ Violence, data=set)
 m9 = lm(DV ~ 1, data=set)
-
-# trying censored-from-above analysis:
-require(censReg)
-# 3-way with left hand
-#sink("Censored-from-above_results.txt")
-censModel1 = censReg(DV ~ Difficulty*Violence*L2d4d, left=1, right=9, data=set)
-summary(censModel1)
-# 3-way w/ right hand
-censModel2 = censReg(DV ~ Difficulty*Violence*R2d4d, left=1, right=9, data=set)
-summary(censModel2)
-# 2-ways, dropping 2d4d & 3-ways
-censModel3 = censReg(DV ~ Difficulty*Violence, left=1, right=9, data=set)
-summary(censModel3)
-#sink()
-
-# how about binning?
-# logistic regression
-require(rms)
-set$DVbin=NA
-set$DVbin[set$DV==9] = 1
-set$DVbin[set$DV<9] = 0
-#sink("Binomial_results.txt", split=T)
-model1 = glm(DVbin ~ Difficulty*Violence*L2d4d, family=binomial(link="logit"), data=set)
-summary(model1)
-model2 = glm(DVbin ~ Difficulty*Violence*R2d4d, family=binomial(link="logit"), data=set)
-summary(model2)
-model3 = glm(DVbin ~ Difficulty*Violence, family=binomial, data=set)
-summary(model3)
-model4 = glm(DVbin ~ L2d4d, family=binomial, data=set)
-model5 = glm(DVbin ~ R2d4d, family=binomial, data=set)
-model6 = glm(DVbin ~ Difficulty + Violence, family=binomial, data=set)
-model7 = glm(DVbin ~ Difficulty, family=binomial, data=set)
-model8 = glm(DVbin ~ Violence, family=binomial, data=set)
-model9 = glm(DVbin ~ 1, family=binomial, data=set)
-# one more, with feeling
-model5a = lrm(DVbin ~ Difficulty * Violence, data=set)
-model6a = lrm(DVbin ~ Difficulty + Violence, data=set)
-model7a = lrm(DVbin ~ Difficulty, data=set)
-model8a = lrm(DVbin ~ Violence, data=set)
-model9a = lrm(DVbin ~ 1, data=set)
 
 ## Bayesian Analysis
 require(BayesFactor)
@@ -145,6 +130,76 @@ plot(bf1)
 
 anovaBF(DV ~ Violence*Difficulty, data=dat1, iterations=10^5)
 anovaBF(DV ~ Violence*Difficulty, data=good1, iterations=10^5)
+
+
+# trying censored-from-above analysis:
+require(censReg)
+# 3-way with left hand
+#sink("Censored-from-above_results.txt")
+censModel1 = censReg(DV ~ Difficulty*Violence*L2d4d, left=1, right=9, data=set)
+summary(censModel1)
+# 3-way w/ right hand
+censModel2 = censReg(DV ~ Difficulty*Violence*R2d4d, left=1, right=9, data=set)
+summary(censModel2)
+# 2-ways, dropping 2d4d & 3-ways
+censModel3 = censReg(DV ~ Difficulty*Violence, left=1, right=9, data=set)
+summary(censModel3)
+t2R(2.41, 223)
+t2R(1.84, 223)
+# simple slopes
+censModel3.1 = censReg(DV ~ Violence, left=1, right=9, data=set[set$Difficulty=="Easy",])
+censModel3.2 = censReg(DV ~ Violence, left=1, right=9, data=set[set$Difficulty=="Hard",])
+summary(censModel3.1); t2R(1.945, 111)
+summary(censModel3.2); t2R(-1.321, 112)
+# additive
+censModel4 = censReg(DV ~ Difficulty+Violence, left=1, right=9, data=set)
+summary(censModel4)
+t2R(1.15, 223)
+t2R(.344, 223)
+# 2d4d?
+censModel5 = censReg(DV ~ L2d4d, dat=set)
+summary(censModel5); t2R(-.194, 153)
+censModel6 = censReg(DV ~ R2d4d, dat=set)
+summary(censModel6); t2R(.13, 153)
+
+
+# how about binning?
+# logistic regression
+require(rms)
+set$DVbin=NA
+set$DVbin[set$DV==9] = 1
+set$DVbin[set$DV<9] = 0
+#sink("Binomial_results.txt", split=T)
+model1 = glm(DVbin ~ Difficulty*Violence*L2d4d, family=binomial(link="logit"), data=set)
+summary(model1)
+model2 = glm(DVbin ~ Difficulty*Violence*R2d4d, family=binomial(link="logit"), data=set)
+summary(model2)
+# 2x2
+model3 = glm(DVbin ~ Difficulty*Violence, family=binomial, data=set)
+summary(model3)
+t2R(-1.599, 223)
+t2R(2.212, 223) # Difficulty
+t2R(.716, 223) # Violence
+  # simple slopes
+model3.1 = glm(DVbin ~ Violence, family=binomial, data=set[dat$Difficulty=="Easy",])
+model3.2 = glm(DVbin ~ Violence, family=binomial, data=set[dat$Difficulty=="Hard",])
+summary(model3.1); t2R(-.626, 105)
+summary(model3.2); t2R(-.284, 105)
+
+# RESUME HERE
+model4 = glm(DVbin ~ L2d4d, family=binomial, data=set)
+model5 = glm(DVbin ~ R2d4d, family=binomial, data=set)
+model6 = glm(DVbin ~ Difficulty + Violence, family=binomial, data=set)
+model7 = glm(DVbin ~ Difficulty, family=binomial, data=set)
+model8 = glm(DVbin ~ Violence, family=binomial, data=set)
+model9 = glm(DVbin ~ 1, family=binomial, data=set)
+# one more, with feeling
+model5a = lrm(DVbin ~ Difficulty * Violence, data=set)
+model6a = lrm(DVbin ~ Difficulty + Violence, data=set)
+model7a = lrm(DVbin ~ Difficulty, data=set)
+model8a = lrm(DVbin ~ Violence, data=set)
+model9a = lrm(DVbin ~ 1, data=set)
+
 
 
 
