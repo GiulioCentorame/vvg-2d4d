@@ -98,6 +98,33 @@ data.frame("Factor" = factor1, "Violence" = set$Violence[complete.cases(set[,34:
   print
 sink()
 
+for (i in 26:31) set[,i] = as.numeric(set[,i])
+set %>%
+  select(Violence, Difficulty, Game.1:Game.6) %>%
+  group_by(Violence, Difficulty) %>%
+  dplyr::summarize("Deaths" = mean(Game.1, na.rm=T),
+            "Deaths.sd" = sd(Game.1, na.rm=T),
+            "Kills" = mean(Game.2, na.rm=T),
+            "Kills.sd" = sd(Game.2, na.rm=T),
+            "Distance" = mean(Game.3, na.rm=T),
+            "Distance.sd" = sd(Game.3, na.rm=T),
+            "Chaingun" = mean(Game.4, na.rm=T),
+            "Chaingun.sd" = sd(Game.4, na.rm=T),
+            "Shotgun" = mean(Game.5, na.rm=T),
+            "Shotgun.sd" = sd(Game.5, na.rm=T),
+            "Wounds" = mean(Game.6, na.rm=T),
+            "Wounds.sd" = sd(Game.6, na.rm=T)
+            ) %>%
+  write.table("Gamevars.txt", sep="\t")
+
+set %>%
+  select(DV, Violence, Difficulty) %>%
+  group_by(Violence, Difficulty) %>%
+  dplyr::summarize("Coldpressor" = mean(DV, na.rm=T),
+            "Coldpressor.sd" = sd(DV, na.rm=T)
+            ) %>%
+  write.table("DV_means.txt", sep="\t", row.names=F)
+
 for (i in 34:39) dat.pure[,i] = as.numeric(dat.pure[,i])
 apply(dat.pure[,34:39], 2, mean, na.rm=T)
 
