@@ -74,10 +74,13 @@ num = temp1[2] - temp1[1]
 d = num/denom
 ci.smd(smd=d, n.1=temp3[1], n.2=temp3[2])
 # Does manip check influence aggression?
-manip.pca = princomp(set[complete.cases(set[,34:39]),34:39], center = T, scale =T)
+set.pca = set[complete.cases(set[,34:39]),]
+manip.pca = princomp(set.pca[,34:39], center = T, scale =T)
 factor1 = manip.pca$scores[,1]
-DV = set$DV[complete.cases(set[,34:39])]
-check2 = lm(DV ~ factor1)
+
+set$factor1 = factor1[match(set$Subject, set.pca$Subject)]
+
+check2 = lm(DV ~ factor1, data=set)
 summary(check2)
 t2R(5.43, 198)
 data.frame("DV" = DV, "PCAfactor" = factor1) %>%
@@ -122,6 +125,12 @@ t2R(-1.05, 112)
 # main effects w/ interaction in
 t2R(2.193, 223) # difficulty
 t2R(2.044, 223) # Violence
+# and adding irritation component as covariate
+m3.5 = lm(DV ~ Difficulty * Violence + factor1, data=set)
+summary(m3.5)
+t2R(1.812, 198) # Difficulty
+t2R(1.398, 198) # Violence
+t2R(-1.620, 198) # Interaction
 
 # 2d4d?
 m4 = lm(DV ~ L2d4d, data=set)
@@ -135,9 +144,17 @@ summary(m6)
 t2R(.887, 223) # difficulty
 t2R(.673, 223) # Violence
 ci.smd(ncp=.673, n.1 = temp3[1], n.2 = temp3[2])
+# additive model with covariate?
+m6.5 = lm(DV ~ Difficulty + Violence + factor1, data=set)
+summary(m6.5)
+t2R(.934, 198) # difficulty
+t2R(.356, 198) # Violence
+
+
 m7 = lm(DV ~ Difficulty, data=set)
 m8 = lm(DV ~ Violence, data=set)
 m9 = lm(DV ~ 1, data=set)
+
 
 ## Bayesian Analysis
 require(BayesFactor)
@@ -147,6 +164,13 @@ bf3 = lmBF(DV ~ Violence*Difficulty*L2d4d, data=set[!is.na(set$L2d4d),], rscaleF
 bf4 = lmBF(DV ~ Violence*Difficulty*R2d4d, data=set[!is.na(set$R2d4d),], rscaleFixed=.4, iterations=10^5)
 bf5 = lmBF(DV ~ L2d4d, data=set[!is.na(set$L2d4d),], rscaleFixed=.4, iterations=10^5)
 bf6 = lmBF(DV ~ R2d4d, data=set[!is.na(set$R2d4d),], rscaleFixed=.4, iterations=10^5)
+set2 = set[complete.cases(set[,c("Violence", "Difficulty", "factor1")]),]
+bf7 = lmBF(DV ~ Violence*Difficulty + factor1, data=set2, rscaleFixed=.4, iterations=10^5)
+bf7.1 = lmBF(DV ~ Violence + Difficulty + factor1, data=set2, rscaleFixed=.4, iterations=10^5)
+bf7.2 = lmBF(DV ~ Violence + factor1, data=set2, rscaleFixed=.4, iterations=10^5)
+bf7.3 = lmBF(DV ~ Difficulty + factor1, data=set2, rscaleFixed=.4, iterations=10^5)
+bf7.4 = lmBF(DV ~ factor1, data=set2, rscaleFixed=.4, iterations=10^5)
+c(bf7, bf7.1, bf7.2, bf7.3, bf7.4)
 #names(bf1)$numerator=c("Violence", "Interactive", "Difficulty", "Additive")
 plot(bf1)
 
@@ -200,8 +224,12 @@ set$DVbin[set$DV<9] = 0
 #sink("Binomial_results.txt", split=T)
 model1 = glm(DVbin ~ Difficulty*Violence*L2d4d, family=binomial(link="logit"), data=set)
 summary(model1)
+model1.1 = glm(DVbin ~ Difficulty*Violence*L2d4d + factor1, family=binomial(link="logit"), data=set)
+summary(model1.1)
 model2 = glm(DVbin ~ Difficulty*Violence*R2d4d, family=binomial(link="logit"), data=set)
 summary(model2)
+model2.1 = glm(DVbin ~ Difficulty*Violence*R2d4d + factor1, family=binomial(link="logit"), data=set)
+summary(model2.1)
 # 2x2
 model3 = glm(DVbin ~ Difficulty*Violence, family=binomial, data=set)
 summary(model3)
@@ -213,10 +241,16 @@ model3.1 = glm(DVbin ~ Violence, family=binomial, data=set[dat$Difficulty=="Easy
 model3.2 = glm(DVbin ~ Violence, family=binomial, data=set[dat$Difficulty=="Hard",])
 summary(model3.1); t2R(-.626, 105)
 summary(model3.2); t2R(-.284, 105)
-
+  # covariate
+model3.5 = glm(DVbin ~ Difficulty*Violence + factor1, family=binomial, data=set)
+summary(model3.5)
 # RESUME HERE
 model4 = glm(DVbin ~ L2d4d, family=binomial, data=set)
+summary(model4); t2R(-.149, 153)
+model4.1 = glm(DVbin ~ L2d4d + factor1, family=binomial, data=set); summary(model4.1)
 model5 = glm(DVbin ~ R2d4d, family=binomial, data=set)
+summary(model5); t2R(-.659, 153)
+model5.1 = glm(DVbin ~ L2d4d, family=binomial, data=set); summary(model5.1)
 model6 = glm(DVbin ~ Difficulty + Violence, family=binomial, data=set)
 summary(model6)
 t2R(1.577, 223) # difficulty
