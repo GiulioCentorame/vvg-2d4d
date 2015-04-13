@@ -46,33 +46,60 @@ dat$R2d4d[dat$R2d4d > 1.1] = NA # remove it
 colnames(dat)
 
 hist(dat$DV); summary(dat$DV) # strong ceiling effect. 11 NAs? 
+
+set = dat.pure # could be "dat", "dat1", "dat2", etc
+
+set = set[!(is.na(set$Violence) | is.na(set$Difficulty) | is.na(set$DV)),]
+set$R2d4d[set$R2d4d > 1.1] = NA # R2d4d outlier removal
+
 # histograms w/ facet wraps for conditions
 require(ggplot2)
 ggplot(dat.pure, aes(x=DV)) + 
   geom_histogram(breaks=c(1:9)) +
   facet_wrap(~Violence+Difficulty, nrow=2) +
-  scale_x_continuous("Coldpressor Assignment")
-
+  scale_x_discrete("Coldpressor Assignment", limits = c(1:9)) +
+  theme(strip.text.x = element_text(size = 12),
+        axis.title.x = element_text(size = 14))
+ggsave("DV-condition_hist.png", width = 5.5, height = 4, units="in")
 
 # Manipulation check
 dat.pure$violence = as.numeric(dat.pure$violence)
 check1 = aov(violence ~ Violence, data=dat.pure)
 summary(check1)
+temp1 = tapply(dat.pure$violence, dat.pure$Violence, mean, na.rm=T)
+temp2 = tapply(dat.pure$violence, dat.pure$Violence, sd, na.rm=T)
+temp3 = table(dat.pure$Violence)
+denom = pool.sd(temp2, temp3)
+num = temp1[2] - temp1[1]
+d = num/denom
+ci.smd(smd=d, n.1=temp3[1], n.2=temp3[2])
+# Does manip check influence aggression?
+manip.pca = princomp(set[complete.cases(set[,34:39]),34:39], center = T, scale =T)
+factor1 = manip.pca$scores[,1]
+DV = set$DV[complete.cases(set[,34:39])]
+check2 = lm(DV ~ factor1)
+summary(check2)
+t2R(5.43, 198)
+data.frame("DV" = DV, "PCAfactor" = factor1) %>%
+  ggplot(aes(x=PCAfactor, y = DV)) +
+  geom_point() +
+  geom_smooth() +
+  theme(axis.title = element_text(size=16))
+ggsave("DV-PCA_scatter.png", width = 5.5, height = 4, units="in")
+
+sink(file="manipcheck_ANOVA.txt")
+data.frame("Factor" = factor1, "Violence" = set$Violence[complete.cases(set[,34:39])],
+           "Difficulty" = set$Difficulty[complete.cases(set[,34:39])]) %>%
+  lm(Factor ~  Violence*Difficulty, data = .) %>%
+  summary %>%
+  print
+sink()
 
 for (i in 34:39) dat.pure[,i] = as.numeric(dat.pure[,i])
 apply(dat.pure[,34:39], 2, mean, na.rm=T)
 
 
 # let's go straight to the good stuff
-
-# dat1 = dat[dat$X1.a == 0,]
-# dat2 = dat[dat$Good.Session != "No",]
-# dat3 = dat[dat$Good.Session != "No" & !filter3,]
-set = dat.pure # could be "dat", "dat1", "dat2", etc
-
-set = set[!(is.na(set$Violence) | is.na(set$Difficulty) | is.na(set$DV)),]
-set$R2d4d[set$R2d4d > 1.1] = NA # R2d4d outlier removal
-
 
 require(car)
 # 3-way w/ left hand. 
@@ -107,6 +134,7 @@ summary(m6)
 # effect sizes in additive model?
 t2R(.887, 223) # difficulty
 t2R(.673, 223) # Violence
+ci.smd(ncp=.673, n.1 = temp3[1], n.2 = temp3[2])
 m7 = lm(DV ~ Difficulty, data=set)
 m8 = lm(DV ~ Violence, data=set)
 m9 = lm(DV ~ 1, data=set)
@@ -190,6 +218,9 @@ summary(model3.2); t2R(-.284, 105)
 model4 = glm(DVbin ~ L2d4d, family=binomial, data=set)
 model5 = glm(DVbin ~ R2d4d, family=binomial, data=set)
 model6 = glm(DVbin ~ Difficulty + Violence, family=binomial, data=set)
+summary(model6)
+t2R(1.577, 223) # difficulty
+t2R(-.704, 223) # violence
 model7 = glm(DVbin ~ Difficulty, family=binomial, data=set)
 model8 = glm(DVbin ~ Violence, family=binomial, data=set)
 model9 = glm(DVbin ~ 1, family=binomial, data=set)
