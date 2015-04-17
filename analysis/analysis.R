@@ -61,6 +61,20 @@ ggplot(dat.pure, aes(x=DV)) +
   theme(strip.text.x = element_text(size = 12),
         axis.title.x = element_text(size = 14))
 ggsave("DV-condition_hist.png", width = 5.5, height = 4, units="in")
+ggplot(dat.pure, aes(x=DV, fill=Violence)) + 
+  geom_histogram(breaks=c(1:9)) +
+  facet_wrap(~Violence+Difficulty, nrow=2) +
+  scale_fill_hue(h.start=180-15,direction=-1) +
+  theme(legend.position="none")
+ggplot(dat.pure, aes(x=interaction(Difficulty, Violence), y=DV)) + 
+  geom_violin(aes(fill = Violence)) +
+  #geom_boxplot(width=.15, notch=T) +
+  stat_summary(fun.y="mean", geom="point", shape=20, size=10, col="black") +
+  stat_summary(fun.y="median", geom="point", shape=20, size=6, col="white") +
+  scale_x_discrete("Condition") +
+  theme(legend.position="none",
+        axis.text.x = element_text(color="black", size=12)
+  )
 
 # Manipulation check
 dat.pure$violence = as.numeric(dat.pure$violence)
@@ -83,7 +97,7 @@ set$factor1 = factor1[match(set$Subject, set.pca$Subject)]
 check2 = lm(DV ~ factor1, data=set)
 summary(check2)
 t2R(5.43, 198)
-data.frame("DV" = DV, "PCAfactor" = factor1) %>%
+data.frame("DV" = set.pca$DV, "PCAfactor" = factor1) %>%
   ggplot(aes(x=PCAfactor, y = DV)) +
   geom_point() +
   geom_smooth() +
