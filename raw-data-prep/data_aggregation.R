@@ -113,11 +113,11 @@ outDat$Good.Session[outDat$Good.Session %in% c("N/A", ".")] = NA
 outDat$Good.Session[outDat$Good.Session == "No/Maybe"] = "No"
 
 # ditto dat$Game.play.affect.distraction.time
-outDat$Game.play.affect.distraction.time[outDat$Game.play.affect.distraction.time %in% c(
+outDat$Game.affect.distraction[outDat$Game.affect.distraction %in% c(
   "mabye", "Mabye", "maybe")] = "Maybe"
-outDat$Game.play.affect.distraction.time[outDat$Game.play.affect.distraction.time %in% c(
+outDat$Game.affect.distraction[outDat$Game.affect.distraction %in% c(
   "nno", "no", "No ", "no ")] = "No"
-outDat$Game.play.affect.distraction.time[outDat$Game.play.affect.distraction.time %in% c(
+outDat$Game.affect.distraction[outDat$Game.affect.distraction %in% c(
   "yes", "Yes ")] = "Yes"
 
 # version for browsing in Excel and reading feedback

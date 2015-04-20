@@ -1,5 +1,11 @@
-require(dplyr)
-require(magrittr)
+library(rms)
+library(MBESS)
+library(censReg)
+library(dplyr)
+library(magrittr)
+library(ggplot2)
+library(BayesFactor)
+source("../joe-package/F2R.R")
 
 dat = read.delim("./analysis/aggregated_data.txt", 
                #quote="", 
@@ -53,7 +59,6 @@ set = set[!(is.na(set$Violence) | is.na(set$Difficulty) | is.na(set$DV)),]
 set$R2d4d[set$R2d4d > 1.1] = NA # R2d4d outlier removal
 
 # histograms w/ facet wraps for conditions
-require(ggplot2)
 ggplot(dat.pure, aes(x=DV)) + 
   geom_histogram(breaks=c(1:9)) +
   facet_wrap(~Violence+Difficulty, nrow=2) +
@@ -63,6 +68,7 @@ ggplot(dat.pure, aes(x=DV)) +
 ggsave("DV-condition_hist.png", width = 5.5, height = 4, units="in")
 ggplot(dat.pure, aes(x=DV, fill=Violence)) + 
   geom_histogram(breaks=c(1:9)) +
+  scale_x_discrete("Coldpressor Assignment", limits = c(1:9)) +
   facet_wrap(~Violence+Difficulty, nrow=2) +
   scale_fill_hue(h.start=180-15,direction=-1) +
   theme(legend.position="none")
@@ -88,26 +94,24 @@ num = temp1[2] - temp1[1]
 d = num/denom
 ci.smd(smd=d, n.1=temp3[1], n.2=temp3[2])
 # Does manip check influence aggression?
-set.pca = set[complete.cases(set[,34:39]),]
-manip.pca = princomp(set.pca[,34:39], center = T, scale =T)
-factor1 = manip.pca$scores[,1]
+set.pca = set[complete.cases(set[,35:40]),]
+manip.pca = princomp(set.pca[,35:40], center = T, scale =T)
+set.pca$factor1 = manip.pca$scores[,1]
+set.pca = select(set.pca, Subject, factor1)
 
-set$factor1 = factor1[match(set$Subject, set.pca$Subject)]
+set = left_join(set, set.pca)
 
 check2 = lm(DV ~ factor1, data=set)
 summary(check2)
-t2R(5.43, 198)
-data.frame("DV" = set.pca$DV, "PCAfactor" = factor1) %>%
-  ggplot(aes(x=PCAfactor, y = DV)) +
+t2R(5.366, 198)
+ggplot(set, aes(x=factor1, y = DV)) +
   geom_point() +
   geom_smooth() +
   theme(axis.title = element_text(size=16))
 ggsave("DV-PCA_scatter.png", width = 5.5, height = 4, units="in")
 
 sink(file="manipcheck_ANOVA.txt")
-data.frame("Factor" = factor1, "Violence" = set$Violence[complete.cases(set[,34:39])],
-           "Difficulty" = set$Difficulty[complete.cases(set[,34:39])]) %>%
-  lm(Factor ~  Violence*Difficulty, data = .) %>%
+lm(factor1 ~  Violence*Difficulty, data = set) %>%
   summary %>%
   print
 sink()
@@ -139,23 +143,23 @@ set %>%
             ) %>%
   write.table("DV_means.txt", sep="\t", row.names=F)
 
-for (i in 34:39) dat.pure[,i] = as.numeric(dat.pure[,i])
-apply(dat.pure[,34:39], 2, mean, na.rm=T)
+for (i in 35:40) dat.pure[,i] = as.numeric(dat.pure[,i])
+apply(dat.pure[,35:40], 2, mean, na.rm=T)
 
 
 # let's go straight to the good stuff
 
-require(car)
+#library(car)
 # 3-way w/ left hand. 
 #sink(file="ANOVA_results.txt", split=T)
 m1 = lm(DV ~ Difficulty * Violence * L2d4d, data=set)
-summary(m1); Anova(m1, type=3)
+summary(m1); #Anova(m1, type=3)
 # 3-way w/ right hand
 m2 = lm(DV ~ Difficulty * Violence * R2d4d, data=set)
-summary(m2); Anova(m2, type=3)
+summary(m2); #Anova(m2, type=3)
 # 2-ways, dropping 2d4d & 3-ways.
 m3 = lm(DV ~ Difficulty * Violence, data=set)
-summary(m3); Anova(m3, type=3)
+summary(m3); #Anova(m3, type=3)
 # elaboration via simple slopes:
 m3.1 = lm(DV ~ Violence, data=set[set$Difficulty == "Easy",])
 m3.2 = lm(DV ~ Violence, data=set[set$Difficulty == "Hard",])
@@ -190,7 +194,12 @@ m6.5 = lm(DV ~ Difficulty + Violence + factor1, data=set)
 summary(m6.5)
 t2R(.934, 198) # difficulty
 t2R(.356, 198) # Violence
-
+# interactive model with covariate?
+m6.6 = lm(DV ~ Difficulty*Violence + factor1, data=set)
+summary(m6.6)
+t2R(1.811, 198) # difficulty
+t2R(1.398, 198) # Violence
+t2R(-1.543, 198) # interaction
 
 m7 = lm(DV ~ Difficulty, data=set)
 m8 = lm(DV ~ Violence, data=set)
@@ -198,7 +207,6 @@ m9 = lm(DV ~ 1, data=set)
 
 
 ## Bayesian Analysis
-require(BayesFactor)
 
 bf1 = anovaBF(DV ~ Violence*Difficulty, data=set, rscaleFixed=.4, iterations=10^5)
 bf3 = lmBF(DV ~ Violence*Difficulty*L2d4d, data=set[!is.na(set$L2d4d),], rscaleFixed=.4, iterations=10^5)
@@ -211,9 +219,15 @@ bf7.1 = lmBF(DV ~ Violence + Difficulty + factor1, data=set2, rscaleFixed=.4, it
 bf7.2 = lmBF(DV ~ Violence + factor1, data=set2, rscaleFixed=.4, iterations=10^5)
 bf7.3 = lmBF(DV ~ Difficulty + factor1, data=set2, rscaleFixed=.4, iterations=10^5)
 bf7.4 = lmBF(DV ~ factor1, data=set2, rscaleFixed=.4, iterations=10^5)
-c(bf7, bf7.1, bf7.2, bf7.3, bf7.4)
+
+
+
+c(bf7, bf7.1, bf7.2, bf7.3, bf7.4)/bf7.4
+1/(c(bf7, bf7.1, bf7.2, bf7.3, bf7.4)/bf7.4)
+plot(c(bf7, bf7.1, bf7.2, bf7.3, bf7.4)/bf7.4)
 #names(bf1)$numerator=c("Violence", "Interactive", "Difficulty", "Additive")
-plot(bf1)
+plot(bf1, marginExpand=0.28)
+plot(c(bf7, bf7.1, bf7.2, bf7.3, bf7.4))
 
 1/bf1
 1/bf3
@@ -221,12 +235,7 @@ plot(bf1)
 1/bf5
 1/bf6
 
-anovaBF(DV ~ Violence*Difficulty, data=dat1, iterations=10^5)
-anovaBF(DV ~ Violence*Difficulty, data=good1, iterations=10^5)
-
-
 # trying censored-from-above analysis:
-require(censReg)
 # 3-way with left hand
 #sink("Censored-from-above_results.txt")
 censModel1 = censReg(DV ~ Difficulty*Violence*L2d4d, left=1, right=9, data=set)
@@ -258,7 +267,6 @@ summary(censModel6); t2R(.13, 153)
 
 # how about binning?
 # logistic regression
-require(rms)
 set$DVbin=NA
 set$DVbin[set$DV==9] = 1
 set$DVbin[set$DV<9] = 0
@@ -285,7 +293,7 @@ summary(model3.2); t2R(-.284, 105)
   # covariate
 model3.5 = glm(DVbin ~ Difficulty*Violence + factor1, family=binomial, data=set)
 summary(model3.5)
-# RESUME HERE
+
 model4 = glm(DVbin ~ L2d4d, family=binomial, data=set)
 summary(model4); t2R(-.149, 153)
 model4.1 = glm(DVbin ~ L2d4d + factor1, family=binomial, data=set); summary(model4.1)
@@ -309,17 +317,6 @@ model9a = lrm(DVbin ~ 1, data=set)
 
 
 
-# consider using confint()
-
-sink()
-
-qplot(data=set, x=DV, geom="histogram", facets=(~Violence*Difficulty), 
-      main="Histograms of aggression per condition")
-qplot(data=set, x=interaction(set$Violence, set$Difficulty), y=DV, notch=T, geom="boxplot", 
-      xlab = "Condition assigned", ylab="Aggression")
-qplot(data=set, x=interaction(set$Violence, set$Difficulty), y=DV, notch=T, geom="point"
-      ,position=position_jitter(w=.25, h=.1), cex=2, alpha=.9
-      ,xlab = "Condition assigned", ylab="Aggression")
 qplot(data=set, x=L2d4d, y=DV, col=Violence, geom=c("point", "smooth"))
 qplot(data=set, x=R2d4d, y=DV, col=Violence, geom=c("point", "smooth"))
 
@@ -329,33 +326,37 @@ postertext = theme(text = element_text(size=16),
                    strip.text = element_text(size=28),
                    plot.title = element_text(size=32)
 )
+bigtext =   theme(axis.title = element_text(size=14),
+                  plot.title = element_text(size=16))
 
 # scatterplot w/ left-hand 2d4d:
 ggplot(data=set, aes(x=L2d4d, y=DV, col=Violence)) +
-  geom_point(cex=4, alpha=.8, position=position_jitter(height=.1)) +
+  geom_point(cex=1, alpha=.8, position=position_jitter(height=.1)) +
   geom_smooth(method="lm")+
   labs(title="Does prenatal testosterone interact with game violence?") +
   xlab("Left-hand 2d4d ratio \n Smaller ratio implies greater testosterone") +
-  ylab("Coldpressor duration assigned (aggression)") +
+  ylab("Coldpressor duration") +
+  scale_y_discrete(limits=1:9) +
+  bigtext
   # make the text huge
-  postertext +
+  # postertext +
   # remove the background
-  theme(panel.background=element_blank(),
+  #theme(panel.background=element_blank(),
         # this part attempts to adjust the axis distance but i'm having trouble
-        axis.title.y=element_text(vjust=.2),
-        axis.title.x=element_text(vjust=.5)
-  )
+  #      axis.title.y=element_text(vjust=.2),
+  #      axis.title.x=element_text(vjust=.5)
+  #)
 
 # scatterplot w/ right-hand 2d4d:
 ggplot(data=set, aes(x=R2d4d, y=DV, col=Violence)) +
-  geom_point(cex=4, alpha=.8, position=position_jitter(height=.1)) +
+  geom_point(cex=1, alpha=.8, position=position_jitter(height=.1)) +
   geom_smooth(method="lm")+
   labs(title="Does prenatal testosterone interact with game violence?") +
-  xlab("Right-hand 2d4d ratio") +
-  ylab("Coldpressor duration assigned (aggression)") +
+  xlab("Right-hand 2d4d ratio \n Smaller ratio implies greater testosterone") +
+  ylab("Coldpressor duration") +
   scale_y_discrete(limits=1:9) +
   # make the text huge
-  postertext #+
+  bigtext #+
 # remove the background
 theme(panel.background=element_blank(),
       # this part attempts to adjust the axis distance but i'm having trouble
@@ -365,52 +366,44 @@ theme(panel.background=element_blank(),
 
 # faceted scatterplot w/ right-hand 2d4d:
 ggplot(data=set, aes(x=R2d4d, y=DV)) +
-  geom_point(cex=4, alpha=.75) +
+  geom_point(cex=1, alpha=.75) +
   geom_smooth(method="lm")+
   labs(title="Null effects of 2d4d ratio (right hand)") +
   xlab("Right-hand 2d4d ratio") +
-  ylab("Coldpressor duration assigned (level)") +
+  ylab("Coldpressor duration") +
   # break it out into each game condition
   facet_wrap(~Violence*Difficulty) +
   scale_y_discrete(limits=1:9, breaks=c(1,3,5,7,9)) +
+  bigtext
   # make the text huge
-  postertext  #+
+#  postertext  #+
 #   # remove the background
 #   theme(panel.background=element_blank(),
 #         # this part attempts to adjust the axis distance but i'm having trouble
 #         axis.title.y=element_text(vjust=.2),
 #         axis.title.x=element_text(vjust=.5)
 #         )
-ggsave("r2d4d_x_2x2.png", width=14, height=10, units="in")
+ggsave("r2d4d_x_2x2.png", width=4, height=3, units="in")
 
 # faceted scatterplot w/ left-hand 2d4d:
 ggplot(data=set, aes(x=L2d4d, y=DV)) +
-  geom_point(cex=4, alpha=.75) +
+  geom_point(cex=1, alpha=.75) +
   geom_smooth(method="lm")+
   labs(title="Null effects of 2d4d ratio (left hand)") +
   xlab("Left-hand 2d4d ratio") +
-  ylab("Coldpressor duration assigned (level)") +
+  ylab("Coldpressor duration") +
   # break it out into each game condition
   facet_wrap(~Violence*Difficulty) +
   scale_y_discrete(limits=1:9, breaks=c(1,3,5,7,9)) +
-  # make the text huge
-  postertext  #+
+  bigtext  #+
 #   # remove the background
 #   theme(panel.background=element_blank(),
 #         # this part attempts to adjust the axis distance but i'm having trouble
 #         axis.title.y=element_text(vjust=.2),
 #         axis.title.x=element_text(vjust=.5)
 #         )
-ggsave("l2d4d_x_2x2.png", width=14, height=10, units="in")
+ggsave("l2d4d_x_2x2.png", width=4, height=3, units="in")
 
-# univariate histograms:
-ggplot(data=set, aes(x=DV)) +
-  geom_histogram() +
-  facet_wrap(~Difficulty*Violence) +
-  xlab("Coldpressor duration assigned (level)") +
-  scale_x_discrete(limits=c(1:9)) +
-  ylab("Count") + 
-  postertext
 # # jitter points
 # ggplot(data=set, aes(x=interaction(set$Violence, set$Difficulty), y=DV)) +
 #   geom_point(position=position_jitter(width=.25, height=.05), cex=3, alpha=.8) +
@@ -418,37 +411,4 @@ ggplot(data=set, aes(x=DV)) +
 #   xlab("Game Condition") +
 #   ylab("Coldpressor duration assigned")
 # boxplot
-ggplot(data=set, aes(x=interaction(set$Violence, set$Difficulty), y=DV)) +
-  geom_boxplot(notch=T) +
-  postertext +
-  theme(axis.text = element_text(size=30)) +
-  scale_y_continuous(limits=c(1,9), breaks=c(1,3,5,7,9)) +
-  xlab("Game Condition") +
-  ylab("Coldpressor duration assigned (level)")
 
-
-ggplot(data=set, aes(x=L2d4d, y=DV, col=Violence)) +
-  geom_point() +
-  geom_smooth(method="lm")+
-  labs(title="Does prenatal testosterone interact with game violence?") +
-  xlab("Left 2d4d ratio \n Smaller ratio implies greater testosterone") +
-  ylab("Coldpressor duration assigned (aggression)")
-
-ggplot(data=set, aes(x=R2d4d, y=DV, col=Difficulty)) +
-  geom_point() +
-  geom_smooth(method="lm")+
-  labs(title="Does prenatal testosterone interact with game difficulty?") +
-  xlab("Right 2d4d ratio \n Smaller ratio implies greater testosterone") +
-  ylab("Coldpressor duration assigned (aggression)")
-
-
-
-# inspect the shape of these dang ol' priors
-r = seq(-1,1,.01)
-plot(x=r, y=dcauchy(r, scale=.21), type='l', col='red')
-lines(x=r, y=dcauchy(r, scale=.1), type='l')
-lines(x=r, y=dcauchy(r, scale=.5), type='l', col='blue')
-lines(x=r, y=dcauchy(r, scale=sqrt(2)/2), type='l', col='green')
-lines(x=r, y=dcauchy(r, scale=1), type='l', col='orange')
-
-pcauchy(.21, scale=.21, lower.tail=F) #
