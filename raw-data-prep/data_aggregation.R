@@ -7,6 +7,8 @@
 
 #install.packages("readxl")
 library(readxl)
+library(dplyr)
+library(reshape2)
 
 dataSheets = c("Debrief", "Distraction_Assignment", "Note_sheet", 
                "Post-Questionnaire", "Writing_Task_Evaluation")
@@ -23,7 +25,7 @@ for (i in 1:length(dataSheets)) {
     nchar(dataSheets[i])+3)
   for (j in 1:length(RAs)) {
     fileName = paste(path, dataSheets[i], "_", RAs[j], ".xlsx", sep="")
-    temp = read_excel(fileName, 1)
+    temp = read_excel(fileName, 1, na = "NA")
     temp$Entrant = RAs[j]
     names(temp)[ncol(temp)] = paste("Entrant", dataSheets[i], sep="_")
     print(fileName); print(names(temp))
@@ -54,6 +56,7 @@ outList[[1]] = debrief ###
 distract = outList[[2]]
 distract = distract[!(distract$Subject %in% c(168, 170, 203, 33)),] # ??? doesn't remove rows?
 distract = distract[!(distract$Subject == "165 or 167?"),]
+filter(distract, Subject %in% c(224:225))
 distract = distract[complete.cases(distract),]
 #
 outList[[2]] = distract ###
@@ -61,7 +64,7 @@ outList[[2]] = distract ###
 notes = outList[[3]]
 notes[notes$Subject == 150,] # double-entered by AM and TH
 notes = notes[!(notes$Subject == 150 & notes$Entrant_Note_sheet == "TH"),] # deleting duplicate row
-notes[notes$Subject == 150,] # double-entered by AM and TH
+notes[notes$Subject == 150,] # overlap fixed
 
 #
 outList[[3]] = notes ###
@@ -79,13 +82,13 @@ names(digits)[1] = "Subject"
 outList[[6]] = digits
 
 # Aggregate everything into a single huge spreadsheet
-require(reshape2)
+
 molten = melt(outList, id.var = "Subject")
+molten = molten[!is.na(molten$Subject),]
 outDat = dcast(molten, Subject ~ ...)
+
 # If it's aggregating, you've done it wrong!
 # use t = table(molten$Subject, molten$variable); which(t > 1, arr.ind=T); rownames() to debug 
-
-# I really must fix the column names before I write more code.
 
 # Fix up some misc data entry screwups
 #dat$Good.Session_Note_sheet[]
