@@ -5,8 +5,8 @@
 
 # Subject 80 "bad"?
 
-#install.packages("xlsx")
-library(xlsx)
+#install.packages("readxl")
+library(readxl)
 
 dataSheets = c("Debrief", "Distraction_Assignment", "Note_sheet", 
                "Post-Questionnaire", "Writing_Task_Evaluation")
@@ -23,7 +23,7 @@ for (i in 1:length(dataSheets)) {
     nchar(dataSheets[i])+3)
   for (j in 1:length(RAs)) {
     fileName = paste(path, dataSheets[i], "_", RAs[j], ".xlsx", sep="")
-    temp = read.xlsx(fileName, 1, stringsAsFactors=F)
+    temp = read_excel(fileName, 1)
     temp$Entrant = RAs[j]
     names(temp)[ncol(temp)] = paste("Entrant", dataSheets[i], sep="_")
     print(fileName); print(names(temp))
