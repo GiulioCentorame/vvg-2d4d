@@ -88,6 +88,7 @@ ggplot(dat.pure, aes(x=interaction(Difficulty, Violence), y=DV)) +
   )
 
 # Manipulation check
+  # violent content
 dat.pure$violence = as.integer(dat.pure$violence)
 check1 = aov(violence ~ Violence, data=dat.pure)
 summary(check1)
@@ -110,16 +111,18 @@ ggsave("violence-condition_hist.png", width = 5.5, height = 4, units="in")
 
 
 # Does manip check influence aggression?
+  # composite irritation
 set.pca = set[complete.cases(set[,35:40]),]
 manip.pca = princomp(set.pca[,35:40], center = T, scale =T)
 set.pca$factor1 = manip.pca$scores[,1]
 set.pca = select(set.pca, Subject, factor1)
-
+# join it
 set = left_join(set, set.pca)
-
+# statistical test
 check2 = lm(DV ~ factor1, data=set)
 summary(check2)
 t2R(5.366, 198)
+# plot it
 ggplot(set, aes(x=factor1, y = DV)) +
   geom_point(cex=2, alpha=.8, position=position_jitter(height=.1)) +
   geom_smooth() +
@@ -128,13 +131,39 @@ ggplot(set, aes(x=factor1, y = DV)) +
   ggtitle("Dependent Variable is Sensitive") +
   bigtext
 ggsave("DV-PCA_scatter.png", width = 5.5, height = 4, units="in")
-
+# output null relationship w/ experimental condition
 sink(file="manipcheck_ANOVA.txt")
 lm(factor1 ~  Violence*Difficulty, data = set) %>%
   summary %>%
   print
 sink()
 
+# composite difficulty?
+for (i in 43:64) set[,i] = as.numeric(set[,i])
+# PCA
+difficultCols = c(43, 46, 47, 49, 50, 53, 54, 55, 56, 57, 58, 61:64)
+set.pca2 = set[complete.cases(set[, difficultCols]),]
+manip.pca2 = princomp(set.pca2[, difficultCols], center = T, scale =T)
+set.pca2$diffFactor1 = -manip.pca2$scores[,1] # reverse-scored
+#set.pca2$diffFactor2 = manip.pca$scores[,2]
+set.pca2 = select(set.pca2, Subject, diffFactor1)
+# join it
+set = left_join(set, set.pca2)
+# manip check
+summary(lm(diffFactor1 ~ Violence*Difficulty, data=set))
+temp4 = table(dat$Difficulty)
+ci.smd(ncp = 6.701, n.1 = temp4[1], n.2 = temp4[2])
+# plot
+ggplot(set, aes(x=diffFactor1)) +
+  geom_histogram() +
+  facet_wrap(~Difficulty) +
+  scale_x_continuous("Ratings of Difficulty") +
+  scale_y_continuous("Count") +
+  ggtitle("Difficulty Manipulation Check") +
+  bigtext
+ggsave("Difficulty-PCA_hist.png", width = 5.5, height = 4, units="in")
+
+# Summary of gameplay variables
 for (i in 27:32) set[,i] = as.numeric(set[,i])
 set %>%
   select(Violence, Difficulty, Game.1:Game.6) %>%
@@ -199,8 +228,10 @@ t2R(-1.620, 198) # Interaction
 # 2d4d?
 m4 = lm(DV ~ L2d4d, data=set)
 summary(m4)
+t2R(-.914, 213)
 m5 = lm(DV ~ R2d4d, data=set)
 summary(m5)
+t2R(-.02, 212)
 # compare vs no-violence model?
 m6 = lm(DV ~ Difficulty + Violence, data=set)
 summary(m6)
@@ -229,7 +260,20 @@ m9 = lm(DV ~ 1, data=set)
 
 bf1 = anovaBF(DV ~ Violence*Difficulty, data=set, rscaleFixed=.4, iterations=10^5)
 bf3 = lmBF(DV ~ Violence*Difficulty*L2d4d, data=set[!is.na(set$L2d4d),], rscaleFixed=.4, iterations=10^5)
+bf3.1 = lmBF(DV ~ Difficulty*L2d4d + Violence*L2d4d, data=set[!is.na(set$L2d4d),], rscaleFixed=.4, iterations=10^5)
+bf3.2 = lmBF(DV ~ Difficulty*L2d4d, data=set[!is.na(set$L2d4d),], rscaleFixed=.4, iterations=10^5)
+bf3.3 = lmBF(DV ~ Violence*L2d4d, data=set[!is.na(set$L2d4d),], rscaleFixed=.4, iterations=10^5)
+bf3.4 = lmBF(DV ~ L2d4d, data=set[!is.na(set$L2d4d),], rscaleFixed=.4, iterations=10^5)
+plot(c(bf3, bf3.1, bf3.2, bf3.3, bf3.4), marginExpand = .3)
+
 bf4 = lmBF(DV ~ Violence*Difficulty*R2d4d, data=set[!is.na(set$R2d4d),], rscaleFixed=.4, iterations=10^5)
+bf4.1 = lmBF(DV ~ Difficulty*R2d4d + Violence*R2d4d, data=set[!is.na(set$R2d4d),], rscaleFixed=.4, iterations=10^5)
+bf4.2 = lmBF(DV ~ Difficulty*R2d4d, data=set[!is.na(set$R2d4d),], rscaleFixed=.4, iterations=10^5)
+bf4.3 = lmBF(DV ~ Violence*R2d4d, data=set[!is.na(set$R2d4d),], rscaleFixed=.4, iterations=10^5)
+bf4.4 = lmBF(DV ~ R2d4d, data=set[!is.na(set$R2d4d),], rscaleFixed=.4, iterations=10^5)
+plot(c(bf4, bf4.1, bf4.2, bf4.3, bf4.4), marginExpand = .3)
+
+
 bf5 = lmBF(DV ~ L2d4d, data=set[!is.na(set$L2d4d),], rscaleFixed=.4, iterations=10^5)
 bf6 = lmBF(DV ~ R2d4d, data=set[!is.na(set$R2d4d),], rscaleFixed=.4, iterations=10^5)
 set2 = set[complete.cases(set[,c("Violence", "Difficulty", "factor1")]),]
