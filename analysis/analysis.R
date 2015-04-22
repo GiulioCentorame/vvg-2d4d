@@ -1,3 +1,4 @@
+# install.packages(c('rms', 'MBESS', 'censReg', 'magrittr', 'ggplot2'))
 library(rms)
 library(MBESS)
 library(censReg)
@@ -6,6 +7,9 @@ library(magrittr)
 library(ggplot2)
 library(BayesFactor)
 source("../joe-package/F2R.R")
+bigtext =   theme(axis.title = element_text(size=14),
+                  plot.title = element_text(size=16))
+
 
 dat = read.delim("./analysis/aggregated_data.txt", 
                #quote="", 
@@ -66,12 +70,14 @@ ggplot(dat.pure, aes(x=DV)) +
   theme(strip.text.x = element_text(size = 12),
         axis.title.x = element_text(size = 14))
 ggsave("DV-condition_hist.png", width = 5.5, height = 4, units="in")
+
 ggplot(dat.pure, aes(x=DV, fill=Violence)) + 
   geom_histogram(breaks=c(1:9)) +
   scale_x_discrete("Coldpressor Assignment", limits = c(1:9)) +
   facet_wrap(~Violence+Difficulty, nrow=2) +
   scale_fill_hue(h.start=180-15,direction=-1) +
   theme(legend.position="none")
+
 ggplot(dat.pure, aes(x=interaction(Difficulty, Violence), y=DV)) + 
   geom_violin(aes(fill = Violence)) +
   #geom_boxplot(width=.15, notch=T) +
@@ -83,7 +89,7 @@ ggplot(dat.pure, aes(x=interaction(Difficulty, Violence), y=DV)) +
   )
 
 # Manipulation check
-dat.pure$violence = as.numeric(dat.pure$violence)
+dat.pure$violence = as.integer(dat.pure$violence)
 check1 = aov(violence ~ Violence, data=dat.pure)
 summary(check1)
 temp1 = tapply(dat.pure$violence, dat.pure$Violence, mean, na.rm=T)
@@ -93,6 +99,17 @@ denom = pool.sd(temp2, temp3)
 num = temp1[2] - temp1[1]
 d = num/denom
 ci.smd(smd=d, n.1=temp3[1], n.2=temp3[2])
+# plot it
+ggplot(dat.pure, aes(x=violence)) +
+  geom_histogram(breaks=1:7) +
+  facet_wrap(~Violence) +
+  scale_x_discrete("Rated violent content", limits=1:7) +
+  scale_y_continuous("Count") +
+  ggtitle("Violent Content Manipulation Check") + 
+  bigtext
+ggsave("violence-condition_hist.png", width = 5.5, height = 4, units="in")
+
+
 # Does manip check influence aggression?
 set.pca = set[complete.cases(set[,35:40]),]
 manip.pca = princomp(set.pca[,35:40], center = T, scale =T)
@@ -105,9 +122,12 @@ check2 = lm(DV ~ factor1, data=set)
 summary(check2)
 t2R(5.366, 198)
 ggplot(set, aes(x=factor1, y = DV)) +
-  geom_point() +
+  geom_point(cex=2, alpha=.8, position=position_jitter(height=.1)) +
   geom_smooth() +
-  theme(axis.title = element_text(size=16))
+  scale_x_continuous("Composite irritation (1st principal component)")+
+  scale_y_continuous("Coldpressor duration") +
+  ggtitle("Dependent Variable is Sensitive") +
+  bigtext
 ggsave("DV-PCA_scatter.png", width = 5.5, height = 4, units="in")
 
 sink(file="manipcheck_ANOVA.txt")
@@ -116,7 +136,7 @@ lm(factor1 ~  Violence*Difficulty, data = set) %>%
   print
 sink()
 
-for (i in 26:31) set[,i] = as.numeric(set[,i])
+for (i in 27:32) set[,i] = as.numeric(set[,i])
 set %>%
   select(Violence, Difficulty, Game.1:Game.6) %>%
   group_by(Violence, Difficulty) %>%
@@ -133,7 +153,7 @@ set %>%
             "Wounds" = mean(Game.6, na.rm=T),
             "Wounds.sd" = sd(Game.6, na.rm=T)
             ) %>%
-  write.table("Gamevars.txt", sep="\t")
+  write.table("Gamevars.txt", sep="\t", row.names=F)
 
 set %>%
   select(DV, Violence, Difficulty) %>%
@@ -326,8 +346,7 @@ postertext = theme(text = element_text(size=16),
                    strip.text = element_text(size=28),
                    plot.title = element_text(size=32)
 )
-bigtext =   theme(axis.title = element_text(size=14),
-                  plot.title = element_text(size=16))
+
 
 # scatterplot w/ left-hand 2d4d:
 ggplot(data=set, aes(x=L2d4d, y=DV, col=Violence)) +
