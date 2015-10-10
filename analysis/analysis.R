@@ -5,7 +5,7 @@ library(censReg)
 library(dplyr)
 library(ggplot2)
 library(BayesFactor)
-source("../joe-package/F2R.R")
+source("../joe-package/joe-package.R")
 bigtext =   theme(axis.title = element_text(size=14),
                   plot.title = element_text(size=16))
 
@@ -99,6 +99,7 @@ denom = pool.sd(temp2, temp3)
 num = temp1[2] - temp1[1]
 d = num/denom
 ci.smd(smd=d, n.1=temp3[1], n.2=temp3[2])
+
 # plot it
 ggplot(dat.pure, aes(x=violence)) +
   geom_histogram(breaks=1:7) +
@@ -121,7 +122,8 @@ set = left_join(set, set.pca)
 # statistical test
 check2 = lm(DV ~ factor1, data=set)
 summary(check2)
-t2R(5.366, 198)
+t2R(tstat = summary(check2)$coefficients[2,3], 
+    N     = summary(check2)$df[2])
 # plot it
 ggplot(set, aes(x=factor1, y = DV)) +
   geom_point(cex=2, alpha=.8, position=position_jitter(height=.1)) +
@@ -150,9 +152,11 @@ set.pca2 = select(set.pca2, Subject, diffFactor1)
 # join it
 set = left_join(set, set.pca2)
 # manip check
-summary(lm(diffFactor1 ~ Violence*Difficulty, data=set))
+manipCheckDifficulty = summary(lm(diffFactor1 ~ Violence*Difficulty, data=set))
+manipCheckDifficulty
 temp4 = table(dat$Difficulty)
-ci.smd(ncp = 6.701, n.1 = temp4[1], n.2 = temp4[2])
+ci.smd(ncp = manipCheckDifficulty$coefficients["DifficultyHard", 3],
+       n.1 = temp4[1], n.2 = temp4[2])
 # plot
 ggplot(set, aes(x=diffFactor1)) +
   geom_histogram() +
@@ -208,14 +212,19 @@ summary(m2); #Anova(m2, type=3)
 # 2-ways, dropping 2d4d & 3-ways.
 m3 = lm(DV ~ Difficulty * Violence, data=set)
 summary(m3); #Anova(m3, type=3)
+# main effects, not simple effects?
+set$Difficulty.cs = factor(set$Difficulty) %>% C(sum)
+set$Violence.cs = factor(set$Violence) %>% C(sum)
+m3.cs = lm(DV ~ Difficulty.cs * Violence.cs, data=set)
+summary(m3.cs)
 # elaboration via simple slopes:
 m3.1 = lm(DV ~ Violence, data=set[set$Difficulty == "Easy",])
 m3.2 = lm(DV ~ Violence, data=set[set$Difficulty == "Hard",])
 summary(m3.1)
-t2R(2.101, 111)
+t2R(2.039, 123)
 summary(m3.2)
-t2R(-1.05, 112)
-# main effects w/ interaction in
+t2R(-.684, 124)
+# simple effects w/ interaction in
 t2R(2.193, 223) # difficulty
 t2R(2.044, 223) # Violence
 # and adding irritation component as covariate
