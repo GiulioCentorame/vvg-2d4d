@@ -95,6 +95,7 @@ summary(check1)
 temp1 = tapply(dat.pure$violence, dat.pure$Violence, mean, na.rm=T)
 temp2 = tapply(dat.pure$violence, dat.pure$Violence, sd, na.rm=T)
 temp3 = table(dat.pure$Violence)
+temp4 = table(dat.pure$Difficulty)
 denom = pool.sd(temp2, temp3)
 num = temp1[2] - temp1[1]
 d = num/denom
@@ -202,6 +203,10 @@ apply(dat.pure[,35:40], 2, mean, na.rm=T)
 # let's go straight to the good stuff
 
 #library(car)
+# saturated model
+mFull = lm(DV ~ Difficulty * Violence * L2d4d + Difficulty*Violence*R2d4d,
+           data=set)
+summary(mFull)
 # 3-way w/ left hand. 
 #sink(file="ANOVA_results.txt", split=T)
 m1 = lm(DV ~ Difficulty * Violence * L2d4d, data=set)
@@ -244,10 +249,13 @@ t2R(-.02, 212)
 # compare vs no-violence model?
 m6 = lm(DV ~ Difficulty + Violence, data=set)
 summary(m6)
-# effect sizes in additive model?
-t2R(.887, 223) # difficulty
-t2R(.673, 223) # Violence
-ci.smd(ncp=.673, n.1 = temp3[1], n.2 = temp3[2])
+m6.cs = lm(DV ~ Difficulty.cs + Violence.cs, data=set)
+summary(m6.cs)
+# simple effect sizes in additive model?
+t2R(.985, 249) # difficulty
+t2R(.934, 249) # Violence
+ci.smd(ncp=.985, n.1 = temp4[1], n.2 = temp4[2])
+ci.smd(ncp=.934, n.1 = temp3[1], n.2 = temp3[2])
 # additive model with covariate?
 m6.5 = lm(DV ~ Difficulty + Violence + factor1, data=set)
 summary(m6.5)
