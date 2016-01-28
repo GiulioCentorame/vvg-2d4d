@@ -24,15 +24,19 @@ dat %>%
   filter(Difficulty == "Easy", Game.1 > 0) %>%
   select(Subject)
 
+# How do I have 84 missing values for Condition?
+
 # Big list of possible subject exclusion filters
+# TODO: add filter for "Knew the other subject"
 dat.pure =
   dat %>%
   filter(!is.na(DV), !is.na(Violence), !is.na(Difficulty)) %>%
   filter(is.na(Game.1) | !(Difficulty == "Easy" & Game.1 > 0)) %>% # died in easy-game condition
   filter(is.na(Game.6) | !(Difficulty == "Easy" & Game.6 > 0)) %>% # took damage in easy-game condition
   filter(is.na(X1.a) | !(X1.a == 1 & (X1.b == 0 & X1.c == 0 & X1.d == 0 & X1.e == 0)))  %>% # called hypothesis w/o wrong guesses
-  filter(is.na(Good.Session) | Good.Session != "No") # RAs didn't think session went well
-
+  filter(Good.Session != "No")  %>% # RAs didn't think session went well
+  filter(is.na(Good.Session)) # Session quality data is missing
+  
 # may wish to use column dat$Suspected_Debrief
 # dat$Game.play.affect.distraction.time_Debrief or dat$Surprise_Debrief
 # I probably ruined these questionnaires by having the RA attempt funneled debriefing and then
@@ -54,7 +58,7 @@ dat$R2d4d[dat$R2d4d > 1.1] = NA # remove it
 #okay that should do it
 colnames(dat)
 
-hist(dat$DV); summary(dat$DV) # strong ceiling effect. 11 NAs? 
+hist(dat$DV); summary(dat$DV) # strong ceiling effect. 18 NAs? 
 
 set = dat.pure # could be "dat", "dat1", "dat2", etc
 
@@ -63,7 +67,7 @@ set$R2d4d[set$R2d4d > 1.1] = NA # R2d4d outlier removal
 
 # histograms w/ facet wraps for conditions
 ggplot(dat.pure, aes(x=DV)) + 
-  geom_histogram(breaks=c(1:9)) +
+  geom_bar(stat = "count") +
   facet_wrap(~Violence+Difficulty, nrow=2) +
   scale_x_discrete("Coldpressor Assignment", limits = c(1:9)) +
   theme(strip.text.x = element_text(size = 12),
@@ -71,7 +75,7 @@ ggplot(dat.pure, aes(x=DV)) +
 ggsave("DV-condition_hist.png", width = 5.5, height = 4, units="in")
 
 ggplot(dat.pure, aes(x=DV, fill=Violence)) + 
-  geom_histogram(breaks=c(1:9)) +
+  geom_bar(stat = "count") +
   scale_x_discrete("Coldpressor Assignment", limits = c(1:9)) +
   facet_wrap(~Violence+Difficulty, nrow=2) +
   scale_fill_hue(h.start=180-15,direction=-1) +
@@ -103,7 +107,7 @@ ci.smd(smd=d, n.1=temp3[1], n.2=temp3[2])
 
 # plot it
 ggplot(dat.pure, aes(x=violence)) +
-  geom_histogram(breaks=1:7) +
+  geom_bar(stat = "count") +
   facet_wrap(~Violence) +
   scale_x_discrete("Rated violent content", limits=1:7) +
   scale_y_continuous("Count") +

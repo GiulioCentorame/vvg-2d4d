@@ -85,10 +85,38 @@ outList[[6]] = digits
 
 molten = melt(outList, id.var = "Subject")
 molten = molten[!is.na(molten$Subject),]
+
+# scorched-earth strategy: drop variables I don't care about
+unique(molten$variable)
+molten = filter(molten, !(variable %in% c())
+
 outDat = dcast(molten, Subject ~ ...)
 
 # If it's aggregating, you've done it wrong!
+# For debugging:
+molten$Subject = as.numeric(as.character(molten$Subject)) # 35 subjects with stupid IDs
+molten %>% 
+  arrange(Subject) %>% 
+  write.table("debug.txt", sep="\t")
+for (i in names(outDat)[-1]) {
+  if(2 %in% outDat[,i]) {
+    paste0("Double-observation found in column ", i, "!") %>% print
+  }
+  if(3 %in% outDat[,i]) {
+    paste0("Triple-observation found in column ", i, "!") %>% print
+  }
+}
+# outDat %>% 
+#   select(Subject, `1.a_Debrief`:`2.h_Debrief`, 
+#          Game.affect.distraction_Debrief:Entrant_Debrief_Debrief,
+#          `irritated_Post-Questionnaire`:`Entrant_Post-Questionnaire_Post-Questionnaire`) %>% 
+#   filter(Game.affect.distraction_Debrief == 2)
+
 # use t = table(molten$Subject, molten$variable); which(t > 1, arr.ind=T); rownames() to debug 
+# rownames(t[which(t > 1, arr.ind=T)[,1],])
+# ^^ Not that helpful, past joe. Is it really that many? 
+# What's going on here? What does the debug code do?
+# Is the problem tripped by disagreeing values, disagreeing column names, what?
 
 # Fix up some misc data entry screwups
 #dat$Good.Session_Note_sheet[]
