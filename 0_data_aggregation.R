@@ -112,6 +112,7 @@ digCheck %>%
 dat = data.frame("Subject" = 1:450) # holster dataframe
 # coerce subject ID to character for easier joining
 dat$Subject = as.character(dat$Subject)
+note_sheet2$Subject = as.character(note_sheet2$Subject)
 debrief2$Subject = as.character(debrief2$Subject)
 distraction2$Subject = as.character(distraction2$Subject)
 post_questionnaire2$Subject = as.character(post_questionnaire2$Subject)
@@ -119,10 +120,15 @@ writing2$Subject = as.character(writing2$Subject)
 digits2$Subject = as.character(digits2$Subject)
 # combine all via join
 dat = full_join(dat, debrief2, by = "Subject")
+dat = full_join(dat, note_sheet2, by = "Subject")
 dat = full_join(dat, distraction2, by = "Subject")
 dat = full_join(dat, post_questionnaire2, by = "Subject")
 dat = full_join(dat, writing2, by = "Subject")
 dat = full_join(dat, digits2, by = "Subject")
+
+# Drop text columns because they behave terribly when exported to .txt
+dat = dat %>% 
+  select(-ends_with("_t"))
 
 # Export full data sheet for inspection, cleaning, & analysis
 write.table(dat, "full_data.txt", sep = "\t", row.names = F)
