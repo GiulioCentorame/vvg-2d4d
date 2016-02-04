@@ -69,6 +69,10 @@ post_questionnaire2 = post_questionnaire %>%
 temp1 = read_excel("./raw-data-prep/raw_data/Writing_Task_Evaluation_AM.xlsx")
 temp2 = read_excel("./raw-data-prep/raw_data/Writing_Task_Evaluation_CH.xlsx")
 temp3 = read_excel("./raw-data-prep/raw_data/Writing_Task_Evaluation_TG.xlsx")
+temp1$Subject = as.character(temp1$Subject)
+temp2$Subject = as.character(temp2$Subject)
+temp3$Subject = as.character(temp3$Subject)
+# combine RA's sheets
 writing = bind_rows(temp1, temp2, temp3)
 # Aggregate.
 writing2 = writing %>% 
@@ -98,3 +102,27 @@ hist(digCheck$R_ring_angle)
 hist(digCheck$R_ring_length)
 hist(digCheck$R_index_angle)
 hist(digCheck$R_index_length)
+# High-variance double-codings
+# Neither number seems obviously wrong; maybe a 3rd coding would resolve it
+digCheck %>% 
+  filter(L_ring_length > 10, L_index_length > 10,
+         R_ring_length > 10, R_index_length > 10)
+
+# Combine all data
+dat = data.frame("Subject" = 1:450) # holster dataframe
+# coerce subject ID to character for easier joining
+dat$Subject = as.character(dat$Subject)
+debrief2$Subject = as.character(debrief2$Subject)
+distraction2$Subject = as.character(distraction2$Subject)
+post_questionnaire2$Subject = as.character(post_questionnaire2$Subject)
+writing2$Subject = as.character(writing2$Subject)
+digits2$Subject = as.character(digits2$Subject)
+# combine all via join
+dat = full_join(dat, debrief2, by = "Subject")
+dat = full_join(dat, distraction2, by = "Subject")
+dat = full_join(dat, post_questionnaire2, by = "Subject")
+dat = full_join(dat, writing2, by = "Subject")
+dat = full_join(dat, digits2, by = "Subject")
+
+# Export full data sheet for inspection, cleaning, & analysis
+write.table(dat, "full_data.txt", sep = "\t", row.names = F)
