@@ -129,6 +129,10 @@ summary(m2)
 m3 = lm(DV ~ Difficulty * Violence, data = dat)
 summary(m3)
 t2R(.963, 291)
+# I wonder: how do I generate a p-value against H0: r = .21?
+# (z.obs - z.H0) / se(z) ~ z
+(atanh(.05655639) - atanh(.21)) / (1/sqrt(294-3))
+pnorm(-2.67, lower.tail=T)
 # elaboration via simple slopes:
 m3.1 = lm(DV ~ Violence, data=dat[dat$Difficulty == "Easy",])
 m3.2 = lm(DV ~ Violence, data=dat[dat$Difficulty == "Hard",])
