@@ -70,20 +70,20 @@ cor(dat[,c("vioNum", "diffNum", "L2d4d", "R2d4d")], use="pairwise.complete.obs")
 check1 = aov(violence ~ Violence*Difficulty, data=dat)
 summary(check1)
 # effect size d
-temp1 = tapply(dat$violence, dat$Violence, mean, na.rm=T)
-temp2 = tapply(dat$violence, dat$Violence, sd, na.rm=T)
-temp3 = table(dat$Violence)
-temp4 = table(dat$Difficulty)
-denom = pool.sd(temp2, temp3)
-num = temp1[2] - temp1[1]
+vioMeans = tapply(dat$violence, dat$Violence, mean, na.rm=T)
+vioSDs = tapply(dat$violence, dat$Violence, sd, na.rm=T)
+vioN = table(dat$Violence)
+difN = table(dat$Difficulty)
+denom = pool.sd(vioSDs, vioN)
+num = vioMeans[2] - vioMeans[1]
 d = num/denom
-ci.smd(smd=d, n.1=temp3[1], n.2=temp3[2])
+ci.smd(smd = (vioMeans[2] - vioMeans[1]) / pool.sd(vioSDs, vioN), 
+       n.1 = vioN[1], n.2 = vioN[2])
 
 # Difficulty manipulation?
 # manip check
 manipCheckDifficulty = lm(composite_challenge ~ Violence*Difficulty, data=dat) %>% summary()
 manipCheckDifficulty
-temp4 = table(dat$Difficulty)
 # TODO: check that it's kosher to feed ci.smd() a t-value as argument "ncp"
 ci.smd(ncp = manipCheckDifficulty$coefficients["Difficulty1", 3],
        n.1 = temp4[1], n.2 = temp4[2])
