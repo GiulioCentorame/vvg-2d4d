@@ -14,6 +14,37 @@ dat$Difficulty = ifelse(dat$Condition == 2 | dat$Condition == 4, "Hard", "Easy")
 dat$L2d4d = dat$L_index_length/dat$L_ring_length
 dat$R2d4d = dat$R_index_length/dat$R_ring_length
 
+# Count bad subjects ----
+# TODO: check that all this is working right
+# Missing primary data: Condition, DV
+dat %>% 
+  filter(is.na(DV) | is.na(Violence) | is.na(Difficulty) | is.na(Condition)) %>%
+  nrow
+# conflicting DV or condition data
+dat %>% 
+  filter(DV == -999 | Condition == -999) %>% 
+  nrow
+
+# died in easy-game condition
+dat %>% 
+  filter(Difficulty == "Easy", Game.1 > 0) %>% 
+  nrow
+
+# took damage in easy-game condition
+dat %>% 
+  filter(Difficulty == "Easy", Game.6 > 0) %>% 
+  nrow
+
+# called hypothesis w/o wrong guesses
+dat %>% 
+  filter(X1.a == 1 & (X1.b == 0 & X1.c == 0 & X1.d == 0 & X1.e == 0))  %>% 
+  nrow
+
+# RAs didn't think session went well
+dat %>% 
+  filter(Good.Session == "No") %>% 
+  nrow
+
 # Discard bad subjects ----
 dat.pure = dat %>% 
   # Missing primary data: Condition, DV

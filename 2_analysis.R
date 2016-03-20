@@ -7,7 +7,6 @@ library(ggplot2)
 library(BayesFactor)
 source("../joe-package/joe-package.R")
 
-
 # Data import ----
 dat = read.delim("clean_data.txt", stringsAsFactors = F)
 # Convert relevant columns to factors
@@ -54,7 +53,7 @@ print(manip.pca2$loadings)
 # Append PCA1 scores to set.pca
 set.pca2$composite_challenge = manip.pca2$scores[,1]
 # Drop redundant columns
-set.pca2 = select(set.pca2(Subject, composite_challenge))
+set.pca2 = select(set.pca2, Subject, composite_challenge)
 # Append those scores to full dataset
 dat = left_join(dat, set.pca2)
 
