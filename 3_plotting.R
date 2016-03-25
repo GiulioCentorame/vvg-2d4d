@@ -5,7 +5,7 @@ bigtext =   theme(axis.title = element_text(size=14),
 
 # histograms w/ facet wraps for conditions
 ggplot(dat, aes(x=DV)) + 
-  geom_histogram(breaks=c(1:9)) +
+  geom_bar() +
   facet_wrap(~Violence+Difficulty, nrow=2) +
   scale_x_discrete("Coldpressor Assignment", limits = c(1:9)) +
   theme(strip.text.x = element_text(size = 12),
@@ -13,7 +13,7 @@ ggplot(dat, aes(x=DV)) +
 ggsave("DV-condition_hist.png", width = 5.5, height = 4, units="in")
 
 ggplot(dat, aes(x=DV, fill=Violence)) + 
-  geom_histogram(breaks=c(1:9)) +
+  geom_bar() +
   scale_x_discrete("Coldpressor Assignment", limits = c(1:9)) +
   facet_wrap(~Violence+Difficulty, nrow=2) +
   scale_fill_hue(h.start=180-15,direction=-1) +
@@ -42,8 +42,8 @@ dat %>%
   bigtext
 #ggsave("violence-condition_hist.png", width = 5.5, height = 4, units="in")
 
-# Difficulty affect composite challenge?
-ggplot(dat, aes(x=diffFactor1)) +
+# Difficulty affect composite challenge? (Is this reverse-scored?)
+ggplot(dat, aes(x=composite_challenge)) +
   geom_histogram() +
   facet_wrap(~Difficulty) +
   scale_x_continuous("Ratings of Difficulty") +
@@ -53,7 +53,7 @@ ggplot(dat, aes(x=diffFactor1)) +
 #ggsave("Difficulty-PCA_hist.png", width = 5.5, height = 4, units="in")
 
 # Composite irritation influence aggression?
-ggplot(dat, aes(x=factor1, y = DV)) +
+ggplot(dat, aes(x=composite_irritation, y = DV)) +
   geom_point(cex=2, alpha=.8, position=position_jitter(height=.1)) +
   geom_smooth() +
   scale_x_continuous("Composite irritation (1st principal component)")+

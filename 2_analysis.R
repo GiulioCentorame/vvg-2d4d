@@ -17,6 +17,9 @@ dat$Violence = factor(dat$Violence) %>% C(sum)
 dat$Difficulty = factor(dat$Difficulty) %>% C(sum)
 # discard conflicts
 dat[dat == -999] = NA
+# Make centered 2d4ds
+dat$L2d4d_c = dat$L2d4d - mean(dat$L2d4d, na.rm = T)
+dat$R2d4d_c = dat$R2d4d - mean(dat$R2d4d, na.rm = T)
 
 # Create composites: irritation, challenge ----
 
@@ -57,6 +60,10 @@ set.pca2 = select(set.pca2, Subject, composite_challenge)
 # Append those scores to full dataset
 dat = left_join(dat, set.pca2)
 
+# Make means and sds ----
+means = sapply(dat, mean, na.rm = T)
+sds = sapply(dat, sd, na.rm = T)
+
 # Make correlation table ----
 # Make numerics to check point-biserial correlations...
 dat$vioNum = ifelse(dat$Violence == "Violent", 1, 0)
@@ -84,9 +91,10 @@ ci.smd(smd = (vioMeans[2] - vioMeans[1]) / pool.sd(vioSDs, vioN),
 # manip check
 manipCheckDifficulty = lm(composite_challenge ~ Violence*Difficulty, data=dat) %>% summary()
 manipCheckDifficulty
-# TODO: check that it's kosher to feed ci.smd() a t-value as argument "ncp"
+# ncp is "generally the observed t-statistic from comparing the two groups
+# see ?ci.smd
 ci.smd(ncp = manipCheckDifficulty$coefficients["Difficulty1", 3],
-       n.1 = temp4[1], n.2 = temp4[2])
+       n.1 = difN[1], n.2 = difN[2])
 
 # Irritation and DV
 check2 = lm(DV ~ composite_irritation, data=dat)
@@ -119,10 +127,10 @@ dat %>%
 
 # ANOVA models of primary outcome ----
 # Full model, left hand
-m1 = lm(DV ~ Difficulty * Violence * L2d4d, data = dat)
+m1 = lm(DV ~ Difficulty * Violence * L2d4d_c, data = dat)
 summary(m1)
 # Full model, right hand
-m2 = lm(DV ~ Difficulty * Violence * R2d4d, data = dat)
+m2 = lm(DV ~ Difficulty * Violence * R2d4d_c, data = dat)
 summary(m2)
 # 2x2 ANOVA model
 m3 = lm(DV ~ Difficulty * Violence, data = dat)
@@ -158,6 +166,7 @@ t2R(-.35, 273)
 bf1 = anovaBF(DV ~ Violence*Difficulty, data=dat, rscaleFixed=.4, iterations=10^5)
 bf1
 1/bf1
+bfList = 1/exp(bf1@bayesFactor$bf)
 
 # linear models considering L2d4d
 set = dat %>% filter(!is.na(dat$L2d4d))
@@ -244,3 +253,5 @@ summary(model3)
 model3.5 = glm(DVbin ~ Difficulty*Violence + composite_irritation,
                family=binomial(link = "logit"), data=dat)
 summary(model3.5)
+
+save.image()

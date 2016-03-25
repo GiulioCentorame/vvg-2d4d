@@ -1,0 +1,22 @@
+---
+title: "Supplement"
+author: "Joe Hilgard"
+date: "March 25, 2016"
+output: word_document
+---
+
+###Censored regression. 
+To attempt to ameliorate the potential ceiling effect, a censored regression model was fit with the ‘censReg’ package for R (Henningsen, 2013). This fits a censored-regression Tobit model and attempts to model values that exceed the maximum of the scale.
+
+Again, the 2 (Violence) x 2 (Difficulty) model was fit. As in the conventional ANOVA, a small and negative interaction was found (t(219) = -2.26, r = -.15 (-.27, -.02)) such that violent content increased aggressive behavior in the easy condition (t(110) = 1.95, r = .18 (-.01, .36)) but decreased aggressive behavior in the difficult condition (t(111) = -1.32, r = -.12 (-.30, .06)). Main effects of Violence and Difficulty were small, t(219) = 1.84, r = .12 (-.01, .25) and t(219) = 2.41, r = .16 (.03, .28), respectively.
+
+As before, this interaction seems uninterpretable in light of the theoretical predictions.  Removing this interaction from the model again dramatically reduced the size of the estimated main effects. Effects of Violence and Difficulty were very close to zero, t(223) = 0.34, r = .02 (-.11, .15) and t(220) = 1.15, r = .07 (-.05, .21), respectively.
+
+Main effects of 2D:4D were again approximately zero, t(151) = -0.19, r = -.02 (-.17, .14) and t(151) = 0.13, r = .01 (-.15, .17) for left- and right-hand 2D:4D, respectively. Higher-order interactions with Violence or Difficulty were not supported (all |t| < 1.5).  
+
+###Logistic regression. 
+Another possibility is that participants completed the coldpressor assignment in one of two ways: either they followed instructions and randomly assigned the other participant to a value between 1 and 9, or they decided to aggress and assign the other participant the maximum value. To model this possibility, I treated the response variable as a dichotomous outcome. Participants assigning values 1-8 were treated as one category (nonaggressive response) and participants assigning value 9 were treated as the other (aggressive response). Logistic regression was performed to test whether the odds of aggressing were influenced by the experimental assignment.
+
+We conducted a 2 Violence × 2 Difficulty ANOVA with a logistic link function. Violence did not appear to influence aggression, t(220) = -0.70, r = -.05 (-.18, .08). Difficulty also had a minimal effect on aggression, t(220) = 1.58, r = .11 (-.03, .23).	Application of composite irritation as a covariate to these models revealed an effect of composite irritation, t(196) = 4.19, r = .29 (.15, .40), but did not increase the estimated effects of violence, difficulty, or their interaction.
+
+Main effects of 2D:4D on aggression were again negligible. Left 2D:4D did not predict aggression, t(151) = -0.15, r = -.01 (-.17, .15), nor did right 2D:4D, t(150) = -0.05, r = -.05 (-.21, .11). Application of composite irritation as a covariate did not influence the estimated effect. Higher-order interactions of 2D:4D with factors of Violence or Difficulty were not supported by the results (all |t| < 1.53).
