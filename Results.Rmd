@@ -17,11 +17,19 @@ source("../joe-package/joe-package.R")
 
 load(".RData")
 
-reportCI = function(smd = d, n.1 = n.1, n.2 = n.2) {
-  output = ci.smd(smd = d, n.1 = n.1, n.2 = n.2)
+reportCI = function(...) {
+  output = ci.smd(...)
   paste0("*d* = ", signif(output$smd, 2), 
          ", [", signif(output$Lower.Conf.Limit.smd, 2),
          ", ", signif(output$Upper.Conf.Limit.smd, 2),
+         "]")
+}
+
+reportCI_r = function(...) {
+  output = t2R(...)
+  paste0("*r* = ", signif(output$r, 2), 
+         ", [", signif(output$LL, 2),
+         ", ", signif(output$UL, 2),
          "]")
 }
 
@@ -52,6 +60,8 @@ A 2 (Violence) x 2 (Difficulty) ANOVA was conducted to determine whether the gam
 General linear models were used to look for main effects and interactions of game difficulty, game violence, and 2D:4D ratio. Two models were used to look for effects of left and right 2D:4D ratio, separately. Factors were contrast-coded and 2D:4D ratios were centered to preserve orthogonality of parameter estimates.
 
 Neither model found any significant effects. Neither left-hand 2D:4D (`r fetchStats(tidy(m1) %>% filter(term == "L2d4d_c"), summary(m1)$df[2])`) nor right-hand 2D:4D (`r fetchStats(tidy(m2) %>% filter(term == "R2d4d_c"), summary(m2)$df[2])`) had any significant main effect on aggressive behavior. No higher-order interactions involving 2D:4D ratio of either hand were statistically significant. Full model output is summarized in [SUPPLEMENTARY?] Tables [X1 and X2].
+
+Ignoring 2D:4D, a 2 Difficulty × 2 Violence ANOVA did not find significant effects of experimental assignment. Effects of Violence, Difficulty, and their interaction were small: t(`r summary(m3)$df[2]`)s = `r tidy(m3)$statistic[3] %>% round(2)`, `r tidy(m3)$statistic[2] %>% round(2)`, and `r tidy(m3)$statistic[4] %>% round(2)`; rs = `r reportCI_r(tidy(m3)$statistic[3], N = nrow(set))`), `r reportCI_r(tidy(m3)$statistic[2], N = nrow(set))`, and `r reportCI_r(tidy(m3)$statistic[4], N = nrow(set))`), respectively.
 
 Because the earlier manipulation and sensitivity check indicated that much of the variance in aggression could be predicted by composite irritation and that composite irritation was largely orthogonal to the experimental manipulation, composite irritation was added as a covariate. However, this did not increase the observed effect size. In the 2x2 ANOVA, effects of Violence, Difficulty, and their interaction were small: t(193)s = 1.40, 1.81, and -1.62; rs = .09 (-.04, .24), .13 (-.01, .26), and -.11 (-.25 .03), respectively. When the interaction term was dropped, main effects again shrank (Violence: t(194) = 0.36, r = .03 (-.11, .16); Difficulty: t(194) = 0.93, r = .07 (-.07, .20)).
 
