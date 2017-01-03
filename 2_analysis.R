@@ -136,6 +136,7 @@ summary(m2)
 m3 = lm(DV ~ Difficulty * Violence, data = dat)
 summary(m3)
 t2R(.963, 291)
+t2R(1.13, 291)
 # I wonder: how do I generate a p-value against H0: r = .21?
 # (z.obs - z.H0) / se(z) ~ z
 (atanh(.05655639) - atanh(.21)) / (1/sqrt(294-3))

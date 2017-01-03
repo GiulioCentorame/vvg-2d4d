@@ -19,15 +19,41 @@ ggplot(dat, aes(x=DV, fill=Violence)) +
   scale_fill_hue(h.start=180-15,direction=-1) +
   theme(legend.position="none")
 
-ggplot(dat, aes(x=interaction(Difficulty, Violence), y=DV)) + 
-  geom_violin(aes(fill = Violence)) +
-  #geom_boxplot(width=.15, notch=T) +
-  stat_summary(fun.y="mean", geom="point", shape=20, size=10, col="black") +
-  stat_summary(fun.y="median", geom="point", shape=20, size=6, col="white") +
+ggplot(dat, aes(x=Violence, y=DV)) + 
+  facet_grid(~Difficulty) +
+  #geom_violin(aes(fill = Violence)) +
+  geom_boxplot(width=.5, notch=T) +
+  stat_summary(fun.y="mean", geom="point", shape=20, size=10, col="grey50") +
+  stat_summary(fun.y="median", geom="point", shape=20, size=6, col="black") +
   scale_x_discrete("Condition") +
+  scale_y_continuous("Aggression")
+
+
+
   theme(legend.position="none",
         axis.text.x = element_text(color="black", size=12)
   )
+  
+datSum <- dat %>% 
+  group_by(Violence, Difficulty) %>% 
+  summarize(mean = mean(DV, na.rm = T), 
+            sd = sd(DV, na.rm = T),
+            n = n()) %>% 
+  mutate(se = sd/sqrt(n),
+         ll = mean - 1.96*se,
+         ul = mean + 1.96*se)
+
+ggplot(datSum, aes(x = Violence)) +
+  geom_boxplot(aes(y = DV), dat) +
+  geom_pointrange(aes(y = mean, ymin = ll, ymax = ul)) +
+  facet_wrap(~Difficulty)
+
+ggplot(datSum, aes(x = Violence)) +
+  geom_jitter(aes(y = DV), width = .2, height = .1, alpha = .40, dat, col = "#669999") +
+  geom_pointrange(aes(y = mean, ymin = ll, ymax = ul), size = 1.25, col = "#ff0033", alpha = 1) +
+  facet_wrap(~Difficulty) +
+  scale_y_continuous("Aggression")
+
 
 # Manipulation check ----
 # Violent content
