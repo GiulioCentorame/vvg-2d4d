@@ -17,13 +17,14 @@ dat$R2d4d = dat$R_index_length/dat$R_ring_length
 # Count bad subjects ----
 # TODO: check that all this is working right
 # Missing primary data: Condition, DV
+dir.create("debug")
 dat %>% 
   filter(is.na(DV) | is.na(Violence) | is.na(Difficulty) | is.na(Condition)) %>%
-  nrow
+  write.csv(file = "debug/missing_cond_DV.csv", row.names = F)
 # conflicting DV or condition data
 dat %>% 
   filter(DV == -999 | Condition == -999) %>% 
-  nrow
+  write.csv(file = "debug/conflicting_cond_DV.csv", row.names = F)
 
 # died in easy-game condition
 dat %>% 
@@ -64,7 +65,17 @@ dat.pure = dat %>%
 dat.pure$R2d4d[dat.pure$R2d4d < .8] = NA
 dat.pure$L2d4d[dat.pure$L2d4d < .8] = NA
 
-# TODO: look for more bad data, 
+# TODO: look for more bad data
+# Here I gather all columns into one, filter for merge errors, then spread into subjects again
+dat %>% 
+  select(-race2) %>% # trim off race2 b/c it gives -999 for everyone
+  gather(key, value, X1.a:R2d4d) %>% 
+  filter(value %in% c(-999, "CONFLICT!")) %>% 
+  filter(!is.na(Subject)) %>% 
+  spread(key = key, value = value) %>% 
+  write.csv("debug/master_baddata.csv", row.names = F)
+  
+
 # TODO: explore underlying root causes of conflicting info across RAs,
 # TODO: inspect and consider harsher treatment for missing quality-control data
 

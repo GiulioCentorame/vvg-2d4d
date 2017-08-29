@@ -3,8 +3,8 @@ library(readxl)
 library(dplyr)
 library(tidyr)
 
-# tester returns identity in case of a match or an unpaired entry,
-# returns -999 if cells do not match
+# tester() returns identity in case of a match or an unpaired entry,
+# returns "CONFLICT!" or -999 if cells do not match
 tester = function(x) ifelse(length(unique(na.omit(x))) == 1, unique(x), 
                             ifelse(is.numeric(x), -999, "CONFLICT!"))
 
@@ -52,6 +52,9 @@ note_sheet = bind_rows(temp1[,-(1:2)], temp2[,-(1:2)], temp3[,-(1:2)], temp4[,-(
 note_sheet2 = note_sheet %>% 
   group_by(Subject) %>% 
   summarise_each(funs(tester))
+# Check on data w/ conflicts
+note_sheet2 %>% 
+  filter(Condition == -999)
 
 # Post-questionnaire ----
 temp1 = read_excel("./raw-data-prep/raw_data/Post-Questionnaire_AM.xlsx")
