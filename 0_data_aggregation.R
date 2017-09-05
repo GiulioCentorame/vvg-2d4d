@@ -6,16 +6,22 @@ library(tidyr)
 # tester() returns identity in case of a match or an unpaired entry,
 # returns "CONFLICT!" or -999 if cells do not match
 tester = function(x) ifelse(length(unique(na.omit(x))) == 1, unique(x), 
-                            ifelse(is.numeric(x), -999, "CONFLICT!"))
+                            ifelse(length(unique(na.omit(x))) == 0, NA,
+                                   ifelse(is.numeric(x), -999, "CONFLICT!")))
+
+# toss the row if Subject ID is 
 
 # Debriefing questionnaires ----
-debrief = bind_rows(read_excel("./raw-data-prep/raw_data/Debrief_AM.xlsx"), 
-                    read_excel("./raw-data-prep/raw_data/Debrief_TG.xlsx"))
+temp1 <- mutate(read_excel("./raw-data-prep/raw_data/Debrief_AM.xlsx"), Subject = as.numeric(Subject)) 
+temp2 <- mutate(read_excel("./raw-data-prep/raw_data/Debrief_TG.xlsx"), Subject = as.numeric(Subject))
+temp3 <- mutate(read_excel("./raw-data-prep/raw_data/Debrief_HS.xlsx"), Subject = as.numeric(Subject))
+debrief <- bind_rows(temp1, temp2, temp3)
+
 # Aggregate. Double-coded entries will combine, unless they mismatch
 debrief2 = debrief %>% 
   select(-ends_with("_t")) %>% 
   group_by(Subject) %>% 
-  summarise_each(funs(tester))
+  summarise_all(funs(tester))
 
 # Distraction assignments ----
 temp1 = read_excel("./raw-data-prep/raw_data/Distraction_Assignment_AM.xlsx")
@@ -33,7 +39,7 @@ distraction = bind_rows(temp1, temp2, temp3, temp4, temp5)
 # Aggregate. Double-coded entries will combine, unless they mismatch
 distraction2 = distraction %>% 
   group_by(Subject) %>% 
-  summarise_each(funs(tester))
+  summarise_all(funs(tester))
 # Check on data w/ conflicts
 distraction2 %>% 
   filter(!(Assignment %in% 1:9))
@@ -51,7 +57,7 @@ note_sheet = bind_rows(temp1[,-(1:2)], temp2[,-(1:2)], temp3[,-(1:2)], temp4[,-(
 # Aggregate. Double-coded entries will combine, unless they mismatch
 note_sheet2 = note_sheet %>% 
   group_by(Subject) %>% 
-  summarise_each(funs(tester))
+  summarise_all(funs(tester))
 # Check on data w/ conflicts
 note_sheet2 %>% 
   filter(Condition == -999)
@@ -61,12 +67,13 @@ temp1 = read_excel("./raw-data-prep/raw_data/Post-Questionnaire_AM.xlsx")
 temp2 = read_excel("./raw-data-prep/raw_data/Post-Questionnaire_CH.xlsx")
 temp3 = read_excel("./raw-data-prep/raw_data/Post-Questionnaire_RP.xlsx")
 temp4 = read_excel("./raw-data-prep/raw_data/Post-Questionnaire_TG.xlsx")
+temp5 = read_excel("./raw-data-prep/raw_data/Post-Questionnaire_HS.xlsx")
 # bind rows to form full spreadsheet across all RAs
 post_questionnaire = bind_rows(temp1, temp2, temp3, temp4)
 # Aggregate.
 post_questionnaire2 = post_questionnaire %>% 
   group_by(Subject) %>% 
-  summarise_each(funs(tester))
+  summarise_all(funs(tester))
 
 # Writing Task Evaluation ----
 temp1 = read_excel("./raw-data-prep/raw_data/Writing_Task_Evaluation_AM.xlsx")
@@ -80,22 +87,24 @@ writing = bind_rows(temp1, temp2, temp3)
 # Aggregate.
 writing2 = writing %>% 
   group_by(Subject) %>% 
-  summarise_each(funs(tester))
+  summarise_all(funs(tester))
 
 # 2d4d aggregation will require a different tester function
 temp1 = read_excel("./raw-data-prep/raw_data/digits_JS.xlsx")
 temp2 = read_excel("./raw-data-prep/raw_data/digits_RP.xlsx")
 temp3 = read_excel("./raw-data-prep/raw_data/digits_TG.xlsx")
+temp4 = read_excel("./raw-data-prep/raw_data/digits_CN.xlsx")
+temp5 = read_excel("./raw-data-prep/raw_data/digits_HS.xlsx")
 digits = bind_rows(temp1, temp2, temp3)
 # Aggregate
 digits2 = digits %>% 
   select(-Notes_t) %>% 
   group_by(Subject) %>% 
-  summarise_each(funs(mean))
+  summarise_all(funs(mean))
 digCheck = digits %>% 
   select(-Notes_t) %>% 
   group_by(Subject) %>% 
-  summarise_each(funs(sd))
+  summarise_all(funs(sd))
 # Look for miscodings
 hist(digCheck$L_ring_angle)
 hist(digCheck$L_ring_length)
@@ -129,9 +138,11 @@ dat = full_join(dat, post_questionnaire2, by = "Subject")
 dat = full_join(dat, writing2, by = "Subject")
 dat = full_join(dat, digits2, by = "Subject")
 
-# Drop text columns because they behave terribly when exported to .txt
-dat = dat %>% 
-  select(-ends_with("_t"))
+# Export full thing to Rdata
+save(dat, file = "full_data.RData")
 
-# Export full data sheet for inspection, cleaning, & analysis
-write.table(dat, "full_data.txt", sep = "\t", row.names = F)
+# Export full thing sans text columns to .txt
+#    (text columns break it)
+dat %>% 
+  select(-ends_with("_t")) %>% 
+  write.table("full_data.txt", sep = "\t", row.names = F)

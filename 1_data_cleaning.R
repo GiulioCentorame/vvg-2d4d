@@ -80,7 +80,7 @@ dat %>%
   filter(value %in% c(-999, "CONFLICT!")) %>% 
   filter(!is.na(Subject)) %>% 
   spread(key = key, value = value) %>% 
-  write.csv("debug/master_baddata.csv", row.names = F)
+  write.csv("debug/master_baddata.csv", row.names = F, na = "")
   
 
 # TODO: explore underlying root causes of conflicting info across RAs,
