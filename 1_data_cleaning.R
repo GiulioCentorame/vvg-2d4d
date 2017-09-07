@@ -1,6 +1,7 @@
 library(dplyr)
 
 dat = read.delim("full_data.txt")
+stash.names <- names(dat)
 
 # look for missingness
 sapply(dat, function(x) sum(is.na(x)))
@@ -12,7 +13,7 @@ sapply(dat, function(x) sum(x == -999 | x == "CONFLICT!", na.rm = T))
 
 # rename Assignment to DV
 dat = dat %>% 
-  rename(DV = Assignment)
+  mutate(DV = Assignment)
 # Add factor columns for violence & difficulty
 dat$Violence = ifelse(dat$Condition == 1 | dat$Condition == 2, "Violent", "Less Violent")
 dat$Difficulty = ifelse(dat$Condition == 2 | dat$Condition == 4, "Hard", "Easy")
@@ -45,7 +46,7 @@ dat %>%
 
 # called hypothesis w/o wrong guesses
 dat %>% 
-  filter(X1.a == 1 & (X1.b == 0 & X1.c == 0 & X1.d == 0 & X1.e == 0))  %>% 
+  filter(Q1.a == 1 & (Q1.b == 0 & Q1.c == 0 & Q1.d == 0 & Q1.e == 0))  %>% 
   nrow
 
 # RAs didn't think session went well
@@ -64,7 +65,7 @@ dat.pure = dat %>%
   # took damage in easy-game condition
   filter(is.na(Game.6) | !(Difficulty == "Easy" & Game.6 > 0)) %>% 
   # called hypothesis w/o wrong guesses
-  filter(is.na(X1.a) | !(X1.a == 1 & (X1.b == 0 & X1.c == 0 & X1.d == 0 & X1.e == 0)))  %>% 
+  filter(is.na(Q1.a) | !(Q1.a == 1 & (Q1.b == 0 & Q1.c == 0 & Q1.d == 0 & Q1.e == 0)))  %>% 
   # RAs didn't think session went well
   filter(is.na(Good.Session) | Good.Session != "No")
 
@@ -74,13 +75,20 @@ dat.pure$L2d4d[dat.pure$L2d4d < .8] = NA
 
 # TODO: look for more bad data
 # Here I gather all columns into one, filter for merge errors, then spread into subjects again
-dat %>% 
-  select(-race2) %>% # trim off race2 b/c it gives -999 for everyone
-  gather(key, value, X1.a:R2d4d) %>% 
+debug.dat <- dat %>% 
+  gather(key, value, Q1.a:R2d4d) %>% 
   filter(value %in% c(-999, "CONFLICT!")) %>% 
   filter(!is.na(Subject)) %>% 
-  spread(key = key, value = value) %>% 
-  write.csv("debug/master_baddata.csv", row.names = F, na = "")
+  spread(key = key, value = value)
+# Add back in the column names with no conflicts for safety's sake
+temp <- matrix(nrow = 1, ncol = length(stash.names))
+temp <- as.data.frame(temp)
+names(temp) <- stash.names
+temp <- bind_rows(temp, debug.dat) %>% 
+  filter(!is.na(Subject))
+
+# sort into nice column order and export for RAs
+write.csv(temp, "debug/master_baddata.csv", row.names = F, na = "")
   
 
 # TODO: explore underlying root causes of conflicting info across RAs,
