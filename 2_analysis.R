@@ -2,8 +2,7 @@
 library(rms)
 library(MBESS)
 library(censReg)
-library(dplyr)
-library(ggplot2)
+library(tidyverse)
 library(BayesFactor)
 source("../joe-package/joe-package.R")
 
@@ -16,7 +15,8 @@ for (i in factorList) dat[,i] = as.factor(dat[,i])
 dat$Violence = factor(dat$Violence) %>% C(sum)
 dat$Difficulty = factor(dat$Difficulty) %>% C(sum)
 # discard conflicts
-dat[dat == -999] = NA
+dat[dat == -999] <- NA
+dat[dat == "CONFLICT!"] <- NA
 # Make centered 2d4ds
 dat$L2d4d_c = dat$L2d4d - mean(dat$L2d4d, na.rm = T)
 dat$R2d4d_c = dat$R2d4d - mean(dat$R2d4d, na.rm = T)
@@ -84,6 +84,7 @@ difN = table(dat$Difficulty)
 denom = pool.sd(vioSDs, vioN)
 num = vioMeans[2] - vioMeans[1]
 d = num/denom
+d
 ci.smd(smd = (vioMeans[2] - vioMeans[1]) / pool.sd(vioSDs, vioN), 
        n.1 = vioN[1], n.2 = vioN[2])
 
@@ -210,6 +211,7 @@ plot(c(bf7, bf7.1, bf7.2, bf7.3, bf7.4)/bf7.4)
 
 
 # Censored-from-above analysis ----
+library(censReg)
 censModel1 = censReg(DV ~ Difficulty*Violence*L2d4d, left=1, right=9, data=dat)
 summary(censModel1)
 # adding covariate

@@ -33,18 +33,25 @@ merge.character = function(x) {
   return(output)
 }
 
+# check double-coding
+dbl_code_count <- function(x) {
+  group_by(x, Subject) %>% 
+    summarize(n = n()) %>% 
+    with(., table(n))
+}
+
 # unit tests for tester()
-merge.numeric(c(1, 1, 1, 1))
-merge.numeric(c(1, 1, 1, 3))
-merge.numeric(c(1, NA, NA, NA))
-merge.character(c(1, "blue", NA, NA))
-merge.character(c("blue", "blue", NA, NA))
-merge.numeric(1)
-merge.character("blue")
-class(merge.numeric(NA))
-class(merge.numeric(c(NA, NA)))
-class(merge.character(NA))
-class(merge.character(c(NA, NA)))
+stopifnot(merge.numeric(c(1, 1, 1, 1)) == 1)
+stopifnot(merge.numeric(c(1, 1, 1, 3)) == -999)
+stopifnot(merge.numeric(c(1, NA, NA, NA)) == 1)
+stopifnot(merge.character(c(1, "blue", NA, NA)) == "CONFLICT!")
+stopifnot(merge.character(c("blue", "blue", NA, NA)) == "blue")
+stopifnot(merge.numeric(1) == 1)
+stopifnot(merge.character("blue") == "blue")
+stopifnot(class(merge.numeric(NA)) == "numeric") 
+stopifnot(class(merge.numeric(c(NA, NA))) == "numeric")
+stopifnot(class(merge.character(NA)) == "character")
+stopifnot(class(merge.character(c(NA, NA))) == "character")
 
 # data frame test
 testframe <- data.frame(ID = c(1, 1, 2, 2, 3, 3, 4, 4),
@@ -77,6 +84,8 @@ debrief.num <- debrief %>%
   group_by(Subject) %>% 
   summarise_if(is.numeric, merge.numeric)
 debrief2 <- full_join(debrief.num, debrief.chr, by = "Subject")
+# check for double-entry coverage
+dbl_code_count(debrief)
 
 # Distraction assignments ----
 temp1 = read_excel("./raw-data-prep/raw_data/Distraction_Assignment_AM.xlsx", na = c("", "NA"))
@@ -102,7 +111,8 @@ distraction2 = distraction %>%
 # Check on data w/ conflicts
 distraction2 %>% 
   filter(!(Assignment %in% 1:9))
-
+# Check for double-coding
+dbl_code_count(distraction)
 
 # Note sheets ----
 temp1 = read_excel("./raw-data-prep/raw_data/Note_sheet_AM.xlsx")
@@ -124,6 +134,8 @@ note_sheet2 <- full_join(note_sheet.num, note_sheet.chr, by = "Subject")
 # Check on data w/ conflicts
 note_sheet2 %>% 
   filter(Condition == -999)
+# Check for double coding
+dbl_code_count(note_sheet)
 
 # Post-questionnaire ----
 temp1 = read_excel("./raw-data-prep/raw_data/Post-Questionnaire_AM.xlsx")
@@ -132,16 +144,18 @@ temp3 = read_excel("./raw-data-prep/raw_data/Post-Questionnaire_RP.xlsx")
 temp4 = read_excel("./raw-data-prep/raw_data/Post-Questionnaire_TG.xlsx")
 temp5 = read_excel("./raw-data-prep/raw_data/Post-Questionnaire_HS.xlsx")
 # bind rows to form full spreadsheet across all RAs
-post_questionnaire = bind_rows(temp1, temp2, temp3, temp4)
+postquestionnaire = bind_rows(temp1, temp2, temp3, temp4)
 # Aggregate.
-post_questionnaire.num <- post_questionnaire %>% 
+postquestionnaire.num <- postquestionnaire %>% 
   group_by(Subject) %>% 
   summarize_if(is.numeric, merge.numeric)
-post_questionnaire.chr <- post_questionnaire %>% 
+postquestionnaire.chr <- postquestionnaire %>% 
   group_by(Subject) %>% 
   summarize_if(is.character, merge.character)
 
-post_questionnaire2 <- full_join(post_questionnaire.num, post_questionnaire.chr, by = "Subject")
+postquestionnaire2 <- full_join(postquestionnaire.num, postquestionnaire.chr, by = "Subject")
+# check coverage of double-entry
+dbl_code_count(postquestionnaire)
 
 # Writing Task Evaluation ----
 temp1 = read_excel("./raw-data-prep/raw_data/Writing_Task_Evaluation_AM.xlsx")
@@ -162,8 +176,11 @@ temp1 = read_excel("./raw-data-prep/raw_data/digits_JS.xlsx")
 temp2 = read_excel("./raw-data-prep/raw_data/digits_RP.xlsx")
 temp3 = read_excel("./raw-data-prep/raw_data/digits_TG.xlsx")
 temp4 = read_excel("./raw-data-prep/raw_data/digits_CN.xlsx")
+# bad subject number
+temp4$Subject[temp4$Subject %in% c("225", "225-2")] <- NA
+temp4$Subject <- as.numeric(temp4$Subject)
 temp5 = read_excel("./raw-data-prep/raw_data/digits_HS.xlsx")
-digits = bind_rows(temp1, temp2, temp3)
+digits = bind_rows(temp1, temp2, temp3, temp4, temp5)
 # Aggregate
 digits2 = digits %>% 
   select(-Notes_t) %>% 
@@ -187,6 +204,12 @@ hist(digCheck$R_index_length)
 digCheck %>% 
   filter(L_ring_length > 10, L_index_length > 10,
          R_ring_length > 10, R_index_length > 10)
+# Check extent of double-coding
+dbl_code_count(digits) # I want em all double-coded
+# which are not yet double-coded?
+group_by(digits, Subject) %>% 
+  summarize(n = n()) %>% 
+  filter(n < 2)
 
 # Combine all data
 dat = data.frame("Subject" = 1:450) # holster dataframe
@@ -195,20 +218,20 @@ dat$Subject = as.character(dat$Subject)
 note_sheet2$Subject = as.character(note_sheet2$Subject)
 debrief2$Subject = as.character(debrief2$Subject)
 distraction2$Subject = as.character(distraction2$Subject)
-post_questionnaire2$Subject = as.character(post_questionnaire2$Subject)
+postquestionnaire2$Subject = as.character(postquestionnaire2$Subject)
 writing2$Subject = as.character(writing2$Subject)
 digits2$Subject = as.character(digits2$Subject)
 # combine all via join
 dat = full_join(dat, debrief2, by = "Subject")
 dat = full_join(dat, note_sheet2, by = "Subject")
 dat = full_join(dat, distraction2, by = "Subject")
-dat = full_join(dat, post_questionnaire2, by = "Subject")
+dat = full_join(dat, postquestionnaire2, by = "Subject")
 dat = full_join(dat, writing2, by = "Subject")
 dat = full_join(dat, digits2, by = "Subject")
 
 # TODO: Rearrange columns into useful order!
 name_order <- unique(c(names(debrief2), names(note_sheet2),
-                names(distraction2), names(post_questionnaire2),
+                names(distraction2), names(postquestionnaire2),
                 names(writing2), names(digits2)))
 t1 <- select(dat, name_order) %>% names()
 t2 <- names(dat)

@@ -36,7 +36,7 @@ ggplot(dat, aes(x=Violence, y=DV)) +
   
 datSum <- dat %>% 
   group_by(Violence, Difficulty) %>% 
-  summarize(mean = mean(DV, na.rm = T), 
+  summarise(mean = mean(DV, na.rm = T), 
             sd = sd(DV, na.rm = T),
             n = n()) %>% 
   mutate(se = sd/sqrt(n),
