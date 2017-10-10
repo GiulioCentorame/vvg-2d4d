@@ -4,7 +4,8 @@ library(MBESS)
 library(censReg)
 library(tidyverse)
 library(BayesFactor)
-source("../joe-package/joe-package.R")
+library(psych)
+source("../joe-package/joe-package.R") # what am I still using from this? What isn't in hilgard()?
 
 # Data import ----
 dat = read.delim("clean_data.txt", stringsAsFactors = F)
@@ -24,34 +25,38 @@ dat$R2d4d_c = dat$R2d4d - mean(dat$R2d4d, na.rm = T)
 # Create composites: irritation, challenge ----
 
 # Irritation
-# Get complete cases for PCA
-set.pca = dat %>% 
+# Get complete cases for EFA
+set.efa <- dat %>% 
   select(Subject, irritated:annoyed) %>% 
   filter(complete.cases(.))
 # Perform PCA
-manip.pca = set.pca %>% 
-  select(irritated:annoyed) %>% 
-  princomp(center = T, scale = T)
-print(manip.pca$loadings)
-# Append PCA1 scores to set.pca
-set.pca$composite_irritation = manip.pca$scores[,1]
-# Drop redundant columns
-set.pca = select(set.pca, Subject, composite_irritation)
+set.efa %>% 
+  select(-Subject) %>% 
+  fa.parallel() # 2 factors / 1 component
+efa <- select(set.efa, -Subject) %>% 
+  fa(nfactors = 2) #factor 1 is negative affect, factor 2 is positive affect
+# append factor scores to set.efa
+set.efa <- cbind(set.efa, efa$scores)
 # Append those scores to full dataset
-dat = left_join(dat, set.pca)
+dat = left_join(dat, set.efa)
 
 # Challenge
-# Get complete cases for PCA
-set.pca2 = dat %>% 
+# Get complete cases for EFA
+set.efa2 = dat %>% 
   select(Subject, 
          easy.nav, challenging, stressful, diff.nav, reflexes, difficult, 
          good.fight, hard.control, mental.effort, comfort.control, exhausting) %>% 
   filter(complete.cases(.)) 
-# Perform PCA
-manip.pca2 = set.pca2 %>% 
+# Perform parallel analysis
+set.efa2 %>% 
   select(easy.nav:exhausting) %>% 
-  princomp(center = T, scale = T)
+  fa.parallel(fm = 'wls') # because complained about minres default # 5 factors??
 # TODO: Consider these loadings. Component 1 doesn't seem to catch it all. Factor rotation more appropriate?
+efa2 <- select(set.efa2, -Subject) %>% 
+  fa(nfactor = 5) 
+# stressful & exhausting, navigation&comfort, difficulty/fighting, 
+# reflexes/mental effort, and crud
+
 print(manip.pca2$loadings)
 # Append PCA1 scores to set.pca
 set.pca2$composite_challenge = manip.pca2$scores[,1]

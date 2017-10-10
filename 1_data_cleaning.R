@@ -1,3 +1,5 @@
+# TODO: How do I splice in the manually-entered data from Hyunji?
+
 library(dplyr)
 
 dat = read.delim("full_data.txt")
