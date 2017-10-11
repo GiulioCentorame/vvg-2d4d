@@ -1,9 +1,13 @@
 # TODO: How do I splice in the manually-entered data from Hyunji?
+# TODO: Which subjects are irreparably screwed up?
 
 library(dplyr)
 
 dat = read.delim("full_data.txt")
 stash.names <- names(dat)
+
+# remove debug rows
+dat <- filter(dat, !(Subject %in% c(666, 900)))
 
 # look for missingness
 sapply(dat, function(x) sum(is.na(x)))
