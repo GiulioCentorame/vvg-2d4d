@@ -8,7 +8,6 @@ sapply(dat, function(x) sum(is.na(x)))
 # look for merge conflicts
 sapply(dat, function(x) sum(x == -999 | x == "CONFLICT!", na.rm = T))
 
-
 # Create and rename columns ----
 
 # rename Assignment to DV

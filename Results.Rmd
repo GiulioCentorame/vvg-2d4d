@@ -13,7 +13,8 @@ library(dplyr)
 library(ggplot2)
 library(BayesFactor)
 library(broom)
-source("../joe-package/joe-package.R")
+library(hilgard)
+#source("../joe-package/joe-package.R")
 
 load(".RData")
 
@@ -38,13 +39,6 @@ fetchStats = function(x, df) {
   paste("*b* = ", x[1], ", *t*(", df, ") = ", x[3], ", ", printp(x[4]), sep="")
 }
 
-# function for printing p-values
-printp = function(x) {
-  if (x > 1) return("That ain't a p-value, buddy!")
-  if (x == 1) return("*p* = 1.000")
-  if (x < .001) return("*p* < .001")
-  if (x >= .001 & x < 1) return(paste("*p* = ", substring(x, 2), sep = ""))  
-}
 ```
 
 ## Manipulation Check
