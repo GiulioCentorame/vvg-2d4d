@@ -236,3 +236,4 @@ save(dat, file = "full_data.RData")
 dat %>% 
   select(-ends_with("_t")) %>% 
   write.table("full_data.txt", sep = "\t", row.names = F)
+

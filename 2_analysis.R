@@ -4,7 +4,9 @@ library(MBESS)
 library(censReg)
 library(tidyverse)
 library(BayesFactor)
-source("../joe-package/joe-package.R")
+library(psych)
+# install.packages('devtools'); library(devtools); install_github("Joe-Hilgard/hilgard")
+library(hilgard)
 
 # Data import ----
 dat = read.delim("clean_data.txt", stringsAsFactors = F)
@@ -24,34 +26,40 @@ dat$R2d4d_c = dat$R2d4d - mean(dat$R2d4d, na.rm = T)
 # Create composites: irritation, challenge ----
 
 # Irritation
-# Get complete cases for PCA
-set.pca = dat %>% 
+# Get complete cases for EFA
+set.efa <- dat %>% 
   select(Subject, irritated:annoyed) %>% 
   filter(complete.cases(.))
 # Perform PCA
-manip.pca = set.pca %>% 
-  select(irritated:annoyed) %>% 
-  princomp(center = T, scale = T)
-print(manip.pca$loadings)
-# Append PCA1 scores to set.pca
-set.pca$composite_irritation = manip.pca$scores[,1]
-# Drop redundant columns
-set.pca = select(set.pca, Subject, composite_irritation)
+set.efa %>% 
+  select(-Subject) %>% 
+  fa.parallel() # 2 factors / 1 component
+efa <- select(set.efa, -Subject) %>% 
+  fa(nfactors = 2) #factor 1 is negative affect, factor 2 is positive affect
+# append factor scores to set.efa and rename to PA and NA
+set.efa <- cbind(set.efa, efa$scores) %>% 
+  rename("feedback.NA" = MR1, "feedback.PA" = MR2)
+ 
 # Append those scores to full dataset
-dat = left_join(dat, set.pca)
+dat = left_join(dat, set.efa)
 
 # Challenge
-# Get complete cases for PCA
-set.pca2 = dat %>% 
+# Get complete cases for EFA
+set.efa2 = dat %>% 
   select(Subject, 
          easy.nav, challenging, stressful, diff.nav, reflexes, difficult, 
          good.fight, hard.control, mental.effort, comfort.control, exhausting) %>% 
   filter(complete.cases(.)) 
-# Perform PCA
-manip.pca2 = set.pca2 %>% 
+# Perform parallel analysis
+set.efa2 %>% 
   select(easy.nav:exhausting) %>% 
-  princomp(center = T, scale = T)
+  fa.parallel(fm = 'pa') # because complained about minres default # 5 factors??
 # TODO: Consider these loadings. Component 1 doesn't seem to catch it all. Factor rotation more appropriate?
+efa2 <- select(set.efa2, -Subject) %>% 
+  fa(nfactor = 5) 
+# stressful & exhausting, navigation&comfort, difficulty/fighting, 
+# reflexes/mental effort, and crud
+
 print(manip.pca2$loadings)
 # Append PCA1 scores to set.pca
 set.pca2$composite_challenge = manip.pca2$scores[,1]
@@ -98,13 +106,13 @@ ci.smd(ncp = manipCheckDifficulty$coefficients["Difficulty1", 3],
        n.1 = difN[1], n.2 = difN[2])
 
 # Irritation and DV
-check2 = lm(DV ~ composite_irritation, data=dat)
+check2 = lm(DV ~ feedback.PA + feedback.NA, data=dat)
 summary(check2)
-t2R(tstat = summary(check2)$coefficients[2,3], 
-    N     = summary(check2)$df[2])
+t2R(tstat = 3.226, 
+    N     = summary(check2)$df[2]+3)
 
 # Irritation not fostered by game violence
-lm(composite_irritation ~  Violence * Difficulty, data = dat) %>%
+lm(feedback.NA ~  Violence * Difficulty, data = dat) %>%
   summary
 
 # Gameplay variables
@@ -128,13 +136,19 @@ dat %>%
 
 # ANOVA models of primary outcome ----
 # Full model, left hand
-m1 = lm(DV ~ Difficulty * Violence * L2d4d_c, data = dat)
+m1 = lm(DV ~ Difficulty * Violence * L2d4d_c, data = dat,
+        contrasts = list(Difficulty = "contr.sum",
+                         Violence = "contr.sum"))
 summary(m1)
 # Full model, right hand
-m2 = lm(DV ~ Difficulty * Violence * R2d4d_c, data = dat)
+m2 = lm(DV ~ Difficulty * Violence * R2d4d_c, data = dat,
+        contrasts = list(Difficulty = "contr.sum",
+                         Violence = "contr.sum"))
 summary(m2)
 # 2x2 ANOVA model
-m3 = lm(DV ~ Difficulty * Violence, data = dat)
+m3 = lm(DV ~ Difficulty * Violence, data = dat,
+        contrasts = list(Difficulty = "contr.sum",
+                         Violence = "contr.sum"))
 summary(m3)
 t2R(.963, 291)
 t2R(1.13, 291)
@@ -151,7 +165,9 @@ summary(m3.2)
 t2R(.422, 148)
 
 # Adding composite irritation component as covariate
-m3.5 = lm(DV ~ Difficulty * Violence + composite_irritation, data=dat)
+m3.5 = lm(DV ~ Difficulty * Violence + feedback.NA, data=dat,
+          contrasts = list(Difficulty = "contr.sum",
+                           Violence = "contr.sum"))
 summary(m3.5) # soaks up a lot of variance but effect of violence still not significant
 t2R(.735, 269)
 
@@ -163,6 +179,19 @@ m5 = lm(DV ~ R2d4d, data = dat)
 summary(m5)
 t2R(-.35, 273)
 
+# Gameplay variables ----
+dat %>% 
+  select(Game.1:Game.6, DV) %>% 
+  cor(use = 'pairwise')
+select(dat, Game.1:Game.6) %>% 
+  fa.parallel()
+select(dat, Game.1:Game.6) %>% 
+  fa(nfactors = 3)
+dat %>% 
+  select(Game.1:Game.6, DV) %>% 
+  filter(complete.cases(.)) %>% 
+  regressionBF(DV ~ Game.1 + Game.2 + Game.3 + Game.4 + Game.5 + Game.6, data = .) %>% 
+  sort()
 # Bayesian models of primary outcome ----
 # ANOVA
 bf1 = anovaBF(DV ~ Violence*Difficulty, data=dat, rscaleFixed=.4, iterations=10^5)
@@ -191,13 +220,13 @@ plot(c(bf4, bf4.1, bf4.2, bf4.3, bf4.4), marginExpand = .3)
 
 # linear models considering composite irritation covariate
 set2 = dat %>% 
-  select(DV, Violence, Difficulty, composite_irritation) %>% 
+  select(DV, Violence, Difficulty, feedback.NA) %>% 
   filter(complete.cases(.))
-bf7 = lmBF(DV ~ Violence*Difficulty + composite_irritation, data=set2, rscaleFixed=.4, iterations=10^5)
-bf7.1 = lmBF(DV ~ Violence + Difficulty + composite_irritation, data=set2, rscaleFixed=.4, iterations=10^5)
-bf7.2 = lmBF(DV ~ Violence + composite_irritation, data=set2, rscaleFixed=.4, iterations=10^5)
-bf7.3 = lmBF(DV ~ Difficulty + composite_irritation, data=set2, rscaleFixed=.4, iterations=10^5)
-bf7.4 = lmBF(DV ~ composite_irritation, data=set2, rscaleFixed=.4, iterations=10^5)
+bf7 = lmBF(DV ~ Violence*Difficulty + feedback.NA, data=set2, rscaleFixed=.4, iterations=10^5)
+bf7.1 = lmBF(DV ~ Violence + Difficulty + feedback.NA, data=set2, rscaleFixed=.4, iterations=10^5)
+bf7.2 = lmBF(DV ~ Violence + feedback.NA, data=set2, rscaleFixed=.4, iterations=10^5)
+bf7.3 = lmBF(DV ~ Difficulty + feedback.NA, data=set2, rscaleFixed=.4, iterations=10^5)
+bf7.4 = lmBF(DV ~ feedback.NA, data=set2, rscaleFixed=.4, iterations=10^5)
 # Results
 c(bf7, bf7.1, bf7.2, bf7.3, bf7.4)
 plot(c(bf7, bf7.1, bf7.2, bf7.3, bf7.4))
@@ -215,21 +244,21 @@ library(censReg)
 censModel1 = censReg(DV ~ Difficulty*Violence*L2d4d, left=1, right=9, data=dat)
 summary(censModel1)
 # adding covariate
-censModel1.1 = censReg(DV ~ Difficulty*Violence*L2d4d + composite_irritation,
+censModel1.1 = censReg(DV ~ Difficulty*Violence*L2d4d + feedback.NA,
                        left=1, right=9, data=dat)
 summary(censModel1.1)
 # 3-way w/ right hand
 censModel2 = censReg(DV ~ Difficulty*Violence*R2d4d, left=1, right=9, data=dat)
 summary(censModel2)
 # adding covariate
-censModel2.1 = censReg(DV ~ Difficulty*Violence*R2d4d + composite_irritation,
+censModel2.1 = censReg(DV ~ Difficulty*Violence*R2d4d + feedback.NA,
                        left=1, right=9, data=dat)
 summary(censModel2.1)
 # 2-ways, dropping 2d4d & 3-ways
 censModel3 = censReg(DV ~ Difficulty*Violence, left=1, right=9, data=dat)
 summary(censModel3)
 # adding covariate
-censModel3.1 = censReg(DV ~ Difficulty*Violence + composite_irritation,
+censModel3.1 = censReg(DV ~ Difficulty*Violence + feedback.NA,
                        left=1, right=9, data=dat)
 summary(censModel3.1)
 
@@ -239,21 +268,21 @@ dat$DVbin = ifelse(dat$DV == 9, 1, 0)
 model1 = glm(DVbin ~ Difficulty*Violence*L2d4d, family=binomial(link="logit"), data=dat)
 summary(model1)
 # With L2d4d + covariate
-model1.1 = glm(DVbin ~ Difficulty*Violence*L2d4d + composite_irritation, 
+model1.1 = glm(DVbin ~ Difficulty*Violence*L2d4d + feedback.NA, 
                family=binomial(link="logit"), data=dat)
 summary(model1.1)
 # With R2d4d
 model2 = glm(DVbin ~ Difficulty*Violence*R2d4d, family=binomial(link="logit"), data=dat)
 summary(model2)
 # With R2d4d + covariate
-model2.1 = glm(DVbin ~ Difficulty*Violence*R2d4d + composite_irritation,
+model2.1 = glm(DVbin ~ Difficulty*Violence*R2d4d + feedback.NA,
                family=binomial(link="logit"), data=dat)
 summary(model2.1)
 # 2x2 ANOVA
 model3 = glm(DVbin ~ Difficulty*Violence, family=binomial(link = "logit"), data=dat)
 summary(model3)
 # 2x2 ANCOVA (irritation covariate)
-model3.5 = glm(DVbin ~ Difficulty*Violence + composite_irritation,
+model3.5 = glm(DVbin ~ Difficulty*Violence + feedback.NA,
                family=binomial(link = "logit"), data=dat)
 summary(model3.5)
 
