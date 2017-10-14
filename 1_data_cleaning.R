@@ -94,23 +94,19 @@ temp <- bind_rows(temp, debug.dat) %>%
 
 # sort into nice column order and export for RAs
 write.csv(temp, "debug/master_baddata.csv", row.names = F, na = "")
-  
 
-# TODO: explore underlying root causes of conflicting info across RAs,
 # TODO: inspect and consider harsher treatment for missing quality-control data
-
 # TODO: Create 2d4d ratios and look for outliers
 
 # TODO: Notes from old cleaning code ----
-# may wish to use column dat$Suspected_Debrief
-# dat$Game.play.affect.distraction.time_Debrief or dat$Surprise_Debrief
-# I probably ruined these questionnaires by having the RA attempt funneled debriefing and then
-# give the questionnaire... But then, if the funneled debriefing didn't turn up anything,
+# may wish to use debriefing questionnaire columns:
+#   Suspected_Debrief Game.play.affect.distraction.time_Debrief or Surprise_Debrief
+# I probably ruined these questionnaires by having the RA attempt funneled debriefing and 
+# then give the questionnaire... But if the funneled debriefing didn't turn up anything,
 # the paper questionnaire should be legit!
-# Maybe it's become impossible to collect any damn data in this area...
 
 # It looks like RA's decision of whether it was a good session or not
-# had nothing to do with whether or not the subject listed vg & aggression or suspicion of DV
+# had nothing to do with whether subject listed vg & aggression or suspicion of DV
 
 # Export ----
 write.table(dat.pure, "clean_data.txt", sep = "\t", row.names = F)
