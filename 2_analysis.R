@@ -57,13 +57,13 @@ efa2 <- select(set.efa2, -Subject) %>%
 # stressful & exhausting, navigation&comfort, difficulty/fighting, 
 # reflexes/mental effort, and crud
 
-print(manip.pca2$loadings)
-# Append PCA1 scores to set.pca
-set.pca2$composite_challenge = manip.pca2$scores[,1]
-# Drop redundant columns
-set.pca2 = select(set.pca2, Subject, composite_challenge)
-# Append those scores to full dataset
-dat = left_join(dat, set.pca2)
+# print(manip.pca2$loadings)
+# # Append PCA1 scores to set.pca
+# set.pca2$composite_challenge = manip.pca2$scores[,1]
+# # Drop redundant columns
+# set.pca2 = select(set.pca2, Subject, composite_challenge)
+# # Append those scores to full dataset
+# dat = left_join(dat, set.pca2)
 
 # Make means and sds ----
 means = sapply(dat, mean, na.rm = T)
