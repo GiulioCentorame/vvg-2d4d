@@ -3,16 +3,7 @@ library(readxl)
 library(dplyr)
 library(tidyr)
 
-# tester() returns identity in case of a match or an unpaired entry,
-# returns NA if all inputs NA,
-# returns "CONFLICT!" or -999 if cells do not match
-# tester = function(x) {
-#   ifelse(length(unique(na.omit(x))) == 1, unique(x), 
-#          ifelse(length(unique(na.omit(x))) == 0, NA,
-#                 ifelse(is.numeric(x), -999, 
-#                        ifelse(is.na, NA, "CONFLICT!"))))
-# }
-
+# Function for merging numerics and flagging failures to match
 merge.numeric = function(x) {
   # If all values are NA, return NA
   output <- ifelse(length(na.omit(x)) == 0, as.numeric(NA),
@@ -23,6 +14,7 @@ merge.numeric = function(x) {
   return(output)
 }
 
+# function for merging strings and flagging failures to match
 merge.character = function(x) {
   # If all values are NA, return NA
   output <- ifelse(length(na.omit(x)) == 0, as.character(NA),
@@ -40,7 +32,7 @@ dbl_code_count <- function(x) {
     with(., table(n))
 }
 
-# unit tests for tester()
+# unit tests for merge functions
 stopifnot(merge.numeric(c(1, 1, 1, 1)) == 1)
 stopifnot(merge.numeric(c(1, 1, 1, 3)) == -999)
 stopifnot(merge.numeric(c(1, NA, NA, NA)) == 1)
