@@ -28,33 +28,6 @@ force.character = function(x) {
   return(output)
 }
 
-
-# demo
-dat <- data.frame("ID" = 1:4,
-                  "A" = c("red", "blue", "CONFLICT!", "green"),
-                  "B" = c(1, 3, 10, -999),
-                  stringsAsFactors = F)
-
-hyunji <- data.frame("ID" = 1:4,
-                     "A" = c(NA, NA, "red", NA),
-                     "B" = c(NA, NA, NA, 5),
-                     stringsAsFactors = F)
-
-(flatdat <- gather(dat, key, value, A:B))
-(flathyunji <- gather(hyunji, key, value, A:B))
-
-left_join(flatdat, flathyunji, by = c("ID", "key"))
-
-bind_rows(flatdat, flathyunji) %>% 
-  filter(key == "B") %>% 
-  group_by(ID, key) %>% 
-  summarize(value = force.numeric(value))
-
-bind_rows(flatdat, flathyunji) %>% 
-  filter(key == "A") %>% 
-  group_by(ID, key) %>% 
-  summarize(value = force.character(value))
-
 # ok for real now
 dat <- read.delim("clean_data.txt", stringsAsFactors = F)
 # hyunji labeled irreconcilably bad or missing data as "BAD"
@@ -79,6 +52,7 @@ hyunji.chr <- hyunji %>%
   select_if(is.character) %>% 
   gather(key, value, -Subject)
 
+# Bind dataframes & use summarize() to force overwrite bad flatdat w/ hyunji's data
 fused.num <- bind_rows(flatdat.num, hyunji.num) %>% 
   group_by(Subject, key) %>% 
   summarize(value = force.numeric(value))
@@ -86,6 +60,7 @@ fused.chr <- bind_rows(flatdat.chr, hyunji.chr) %>%
   group_by(Subject, key) %>% 
   summarize(value = force.character(value))
 
+# turn back into wide data
 wide.num <- spread(fused.num, key, value)
 wide.chr <- spread(fused.chr, key, value)
 fixed.dat <- full_join(wide.num, wide.chr, by = "Subject")

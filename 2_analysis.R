@@ -57,16 +57,12 @@ set.efa2 %>%
 # TODO: Consider these loadings. Component 1 doesn't seem to catch it all. Factor rotation more appropriate?
 efa2 <- select(set.efa2, -Subject) %>% 
   fa(nfactor = 5) 
-# stressful & exhausting, navigation&comfort, difficulty/fighting, 
+# stressful & exhausting, navigation&controls, difficulty/fighting, 
 # reflexes/mental effort, and crud
-
-# print(manip.pca2$loadings)
-# # Append PCA1 scores to set.pca
-# set.pca2$composite_challenge = manip.pca2$scores[,1]
-# # Drop redundant columns
-# set.pca2 = select(set.pca2, Subject, composite_challenge)
-# # Append those scores to full dataset
-# dat = left_join(dat, set.pca2)
+set.efa2 <- cbind(set.efa2, efa2$scores) %>% 
+  rename("stress" = MR3, "navigation" = MR2, "fighting" = MR4, 
+         "effort" = MR4, "crud" = MR1)
+dat <- left_join(dat, set.efa2)
 
 # Make means and sds ----
 means = sapply(dat, mean, na.rm = T)
@@ -88,22 +84,17 @@ summary(check1)
 vioMeans = tapply(dat$violence, dat$Violence, mean, na.rm=T)
 vioSDs = tapply(dat$violence, dat$Violence, sd, na.rm=T)
 vioN = table(dat$Violence)
-difN = table(dat$Difficulty)
-denom = pool.sd(vioSDs, vioN)
-num = vioMeans[2] - vioMeans[1]
-d = num/denom
-d
 ci.smd(smd = (vioMeans[2] - vioMeans[1]) / pool.sd(vioSDs, vioN), 
        n.1 = vioN[1], n.2 = vioN[2])
 
 # Difficulty manipulation?
 # manip check
-manipCheckDifficulty = lm(composite_challenge ~ Violence*Difficulty, data=dat) %>% summary()
-manipCheckDifficulty
-# ncp is "generally the observed t-statistic from comparing the two groups
-# see ?ci.smd
-ci.smd(ncp = manipCheckDifficulty$coefficients["Difficulty1", 3],
-       n.1 = difN[1], n.2 = difN[2])
+# manipCheckDifficulty = lm(composite_challenge ~ Violence*Difficulty, data=dat) %>% summary()
+# manipCheckDifficulty
+# # ncp is "generally the observed t-statistic from comparing the two groups
+# # see ?ci.smd
+# ci.smd(ncp = manipCheckDifficulty$coefficients["Difficulty1", 3],
+#        n.1 = difN[1], n.2 = difN[2])
 
 # Irritation and DV
 check2 = lm(DV ~ feedback.PA + feedback.NA, data=dat)

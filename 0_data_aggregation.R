@@ -1,7 +1,6 @@
 # different approach
 library(readxl)
-library(dplyr)
-library(tidyr)
+library(tidyverse)
 
 # Function for merging numerics and flagging failures to match
 merge.numeric = function(x) {
