@@ -181,7 +181,7 @@ digCheck = digits %>%
   select(-Notes_t) %>% 
   group_by(Subject) %>% 
   summarise_all(funs(sd))
-# Look for miscodings
+# Look for miscodings as indicated by high SD
 hist(digCheck$L_ring_angle)
 hist(digCheck$L_ring_length)
 hist(digCheck$L_index_angle)
