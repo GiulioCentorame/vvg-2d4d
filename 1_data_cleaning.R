@@ -1,6 +1,6 @@
 library(dplyr)
 
-dat = read.delim("full_data.txt")
+dat = read.delim("full_data.txt", stringsAsFactors = F)
 stash.names <- names(dat)
 
 # remove debug rows
@@ -29,13 +29,13 @@ dat$R2d4d = dat$R_index_length/dat$R_ring_length
 # Might want to create codes, make tables for ease of tracking where the data is lost
 # Missing primary data: Condition, DV
 dir.create("debug")
-dat %>% 
-  filter(is.na(DV) | is.na(Violence) | is.na(Difficulty) | is.na(Condition)) %>%
-  write.csv(file = "debug/missing_cond_DV.csv", row.names = F)
+fail.nodata <- dat %>% 
+  filter(is.na(DV) | is.na(Violence) | is.na(Difficulty) | is.na(Condition))
+write.csv(fail.nodata, file = "debug/missing_cond_DV.csv", row.names = F)
 # conflicting DV or condition data
-dat %>% 
-  filter(DV == -999 | Condition == -999) %>% 
-  write.csv(file = "debug/conflicting_cond_DV.csv", row.names = F)
+fail.conflict <- dat %>% 
+  filter(DV == -999 | Condition == -999) 
+write.csv(fail.conflict, file = "debug/conflicting_cond_DV.csv", row.names = F)
 
 # died in easy-game condition
 fail.easydie <- dat %>% 
@@ -118,12 +118,8 @@ force.character = function(x) {
   return(output)
 }
 
-# ok for real now
-dat <- read.delim("clean_data.txt", stringsAsFactors = F)
-# hyunji labeled irreconcilably bad or missing data as "BAD"
-# I don't want to screw up my classes with character data so I'll treat that as NA
-hyunji <- read_excel("debug/master_baddata.xlsx", na = c("", "BAD"))
-
+# force dat$Subject to numeric
+dat$Subject <- as.numeric(as.character(dat$Subject))
 # separate by class and flatten
 flatdat.num <- dat %>% 
   group_by(Subject) %>%
@@ -162,27 +158,16 @@ dat <- fixed.dat
 
 
 # Discard bad subjects ----
+grep("fail*", ls(), value = T) # list all "fail" objects
+# Filter out subjects who appear in any of the fail objects
 dat.pure = dat %>% 
-  # Missing primary data: Condition, DV
-  filter(!is.na(DV), !is.na(Violence), !is.na(Difficulty), !is.na(Condition)) %>%
-  # conflicting DV or condition data
-  filter(DV != -999, Condition != -999) %>% 
-  # died in easy-game condition
-  filter(is.na(Game.1) | !(Difficulty == "Easy" & Game.1 > 0)) %>% 
-  # took damage in easy-game condition
-  filter(is.na(Game.6) | !(Difficulty == "Easy" & Game.6 > 0)) %>% 
-  # took no damage in hard-game condition
-  filter(is.na(Game.6) | !(Difficulty == "Hard" & Game.6 == 0)) %>% 
-  # called hypothesis w/o wrong guesses
-  filter(is.na(Q1.a) | !(Q1.a == 1 & (Q1.b == 0 & Q1.c == 0 & Q1.d == 0 & Q1.e == 0)))  %>% 
-  # RAs didn't think session went well
-  filter(is.na(Good.Session) | Good.Session != "No")
+    filter(!(Subject %in% c(fail.badsesh$Subject, fail.conflict$Subject, fail.easydie$Subject, 
+                          fail.easyharm$Subject, fail.hard$Subject, fail.nodata$Subject, 
+                          fail.savvy$Subject)))
 
 # Discard bad 2d4d data ----
 dat.pure$R2d4d[dat.pure$R2d4d < .8] = NA
 dat.pure$L2d4d[dat.pure$L2d4d < .8] = NA
-
-# TODO: look for more bad data
 
 # TODO: inspect and consider harsher treatment for missing quality-control data
 # TODO: Create 2d4d ratios and look for outliers

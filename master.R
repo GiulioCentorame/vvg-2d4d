@@ -1,5 +1,5 @@
 # master script
-
+#install.packages(c('car', 'reshape2', 'xlsx', 'BayesFactor', 'rms'))
 library(knitr)
 
 source("0_data_aggregation.R")
