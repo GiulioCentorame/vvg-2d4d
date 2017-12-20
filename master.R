@@ -1,5 +1,7 @@
 # master script
-#install.packages(c('car', 'reshape2', 'xlsx', 'BayesFactor', 'rms'))
+#install.packages(c('car', 'reshape2', 'xlsx', 'BayesFactor', 'rms', 'psych', 'devtools'))
+#library(devtools)
+#install_github("Joe-Hilgard/hilgard")
 library(knitr)
 
 source("0_data_aggregation.R")

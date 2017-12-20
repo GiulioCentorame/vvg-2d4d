@@ -1,5 +1,6 @@
 library(readxl)
 library(tidyverse)
+library(psych)
 
 # Fetch 2d4d raw data
 temp1 = read_excel("./raw-data-prep/raw_data/digits_JS.xlsx")
@@ -37,6 +38,18 @@ filter(cordat, measure == "R2d4d") %>%
   cor(use = "pairwise")
 # rather poor interrater reliability between RP and everyone else
 # and between HS and JS
+
+# use psych:IRR to attempt to get reliabilty
+# L2d4d
+cordat %>% 
+  filter(measure == "L2d4d") %>% 
+  select(CN:TG) %>% 
+  ICC(missing = F)
+# R2d4d
+cordat %>% 
+  filter(measure == "R2d4d") %>% 
+  select(CN:TG) %>% 
+  ICC(missing = F)
 
 # check interrater reliability of individual digits
 filter(cordat, measure == "R_ring_length") %>% 
