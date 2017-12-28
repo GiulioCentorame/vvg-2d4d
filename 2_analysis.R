@@ -1,4 +1,3 @@
-# install.packages(c('rms', 'MBESS', 'censReg', 'dplyr', 'ggplot2', 'BayesFactor'))
 library(rms)
 library(MBESS)
 library(censReg)

@@ -166,12 +166,6 @@ dat = full_join(dat, postquestionnaire2, by = "Subject")
 dat = full_join(dat, writing2, by = "Subject")
 dat = full_join(dat, digits2, by = "Subject")
 
-name_order <- unique(c(names(debrief2), names(note_sheet2),
-                names(distraction2), names(postquestionnaire2),
-                names(writing2), names(digits2)))
-t1 <- select(dat, name_order) %>% names()
-t2 <- names(dat)
-
 # Export full thing to Rdata
 save(dat, file = "full_data.RData")
 
@@ -180,4 +174,3 @@ save(dat, file = "full_data.RData")
 dat %>% 
   select(-ends_with("_t")) %>% 
   write.table("full_data.txt", sep = "\t", row.names = F)
-

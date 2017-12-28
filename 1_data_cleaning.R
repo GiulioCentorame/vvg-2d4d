@@ -1,4 +1,4 @@
-library(dplyr)
+
 
 dat = read.delim("full_data.txt", stringsAsFactors = F)
 stash.names <- names(dat)
@@ -60,7 +60,7 @@ fail.savvy <- dat %>%
 
 # RAs didn't think session went well
 fail.badsesh <- dat %>% 
-  filter(Good.Session == "No") %>% 
+  filter(goodSession == "No") %>% 
   select(Subject)
 
 # RA cited exp failure
