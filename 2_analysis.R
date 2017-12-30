@@ -13,8 +13,9 @@ dat = read.delim("clean_data.txt", stringsAsFactors = F)
 factorList = c("RA", "Subject", "Station","Condition", "Violence", "Difficulty")
 for (i in factorList) dat[,i] = as.factor(dat[,i])
 # Contrast code violence and difficulty (-1, 1)
-dat$Violence = factor(dat$Violence) %>% C(sum)
-dat$Difficulty = factor(dat$Difficulty) %>% C(sum)
+
+dat$Violence = factor(dat$Violence) %>% relevel("Violent") %>% C(sum)
+dat$Difficulty = factor(dat$Difficulty) %>% relevel("Hard") %>% C(sum)
 # discard conflicts
 dat[dat == -999] <- NA
 dat[dat == "CONFLICT!"] <- NA
@@ -63,7 +64,7 @@ set.efa2 <- cbind(set.efa2, efa2$scores) %>%
          "effort" = MR4, "crud" = MR1)
 dat <- left_join(dat, set.efa2)
 
-# Make means and sds ----
+# Make grand means and sds ----
 means = sapply(dat, mean, na.rm = T)
 sds = sapply(dat, sd, na.rm = T)
 
@@ -96,8 +97,11 @@ ci.smd(smd = (vioMeans[2] - vioMeans[1]) / pool.sd(vioSDs, vioN),
 #        n.1 = difN[1], n.2 = difN[2])
 
 # Irritation and DV
-check2 = lm(DV ~ feedback.PA + feedback.NA, data=dat)
+check2 <- lm(DV ~ feedback.NA, data = dat)
 summary(check2)
+
+check2.1 = lm(DV ~ feedback.PA + feedback.NA, data=dat)
+summary(check2.1)
 t2R(tstat = 3.226, 
     N     = summary(check2)$df[2]+3)
 
@@ -197,6 +201,7 @@ bf3.2 = lmBF(DV ~ Difficulty*L2d4d, data=set, rscaleFixed=.4, iterations=10^5)
 bf3.3 = lmBF(DV ~ Violence*L2d4d, data=set, rscaleFixed=.4, iterations=10^5)
 bf3.4 = lmBF(DV ~ L2d4d, data=set, rscaleFixed=.4, iterations=10^5)
 plot(c(bf3, bf3.1, bf3.2, bf3.3, bf3.4), marginExpand = .3)
+# winner is null. odds are 4.4 : 1 over l2d4d
 
 # linear models considering R2d4d
 set = dat %>% filter(!is.na(dat$R2d4d))
@@ -206,7 +211,7 @@ bf4.2 = lmBF(DV ~ Difficulty*R2d4d, data=set, rscaleFixed=.4, iterations=10^5)
 bf4.3 = lmBF(DV ~ Violence*R2d4d, data=set, rscaleFixed=.4, iterations=10^5)
 bf4.4 = lmBF(DV ~ R2d4d, data=set, rscaleFixed=.4, iterations=10^5)
 plot(c(bf4, bf4.1, bf4.2, bf4.3, bf4.4), marginExpand = .3)
-
+1/bf4.4 # bf is 6.5 : 1 for the null
 
 # linear models considering composite irritation covariate
 set2 = dat %>% 
