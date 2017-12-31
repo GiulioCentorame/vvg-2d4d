@@ -19,9 +19,9 @@ dat$Difficulty = factor(dat$Difficulty) %>% relevel("Hard") %>% C(sum)
 # discard conflicts
 dat[dat == -999] <- NA
 dat[dat == "CONFLICT!"] <- NA
-# Make centered 2d4ds
-dat$L2d4d_c = dat$L2d4d - mean(dat$L2d4d, na.rm = T)
-dat$R2d4d_c = dat$R2d4d - mean(dat$R2d4d, na.rm = T)
+# Make standardized 2d4ds
+dat$L2d4d_std = dat$L2d4d - mean(dat$L2d4d, na.rm = T) / sd(dat$L2d4d, na.rm = T)
+dat$R2d4d_std = dat$R2d4d - mean(dat$R2d4d, na.rm = T) / sd(dat$R2d4d, na.rm = T)
 
 # Create composites: irritation, challenge ----
 
@@ -130,12 +130,12 @@ dat %>%
 
 # ANOVA models of primary outcome ----
 # Full model, left hand
-m1 = lm(DV ~ Difficulty * Violence * L2d4d_c, data = dat,
+m1 = lm(DV ~ Difficulty * Violence * L2d4d_std, data = dat,
         contrasts = list(Difficulty = "contr.sum",
                          Violence = "contr.sum"))
 summary(m1)
 # Full model, right hand
-m2 = lm(DV ~ Difficulty * Violence * R2d4d_c, data = dat,
+m2 = lm(DV ~ Difficulty * Violence * R2d4d_std, data = dat,
         contrasts = list(Difficulty = "contr.sum",
                          Violence = "contr.sum"))
 summary(m2)
@@ -230,10 +230,6 @@ c(bf7, bf7.1, bf7.2, bf7.3, bf7.4)/bf7.4
 1/(c(bf7, bf7.1, bf7.2, bf7.3, bf7.4)/bf7.4)
 plot(c(bf7, bf7.1, bf7.2, bf7.3, bf7.4)/bf7.4)
 
-# TODO: add code for Dienes calculator. 
-# Compare observed effect size (w/ and w/o covariate) against H3: r = .21 +/- some change
-
-
 # Censored-from-above analysis ----
 library(censReg)
 censModel1 = censReg(DV ~ Difficulty*Violence*L2d4d, left=1, right=9, data=dat)
@@ -248,8 +244,8 @@ summary(censModel2)
 # adding covariate
 censModel2.1 = censReg(DV ~ Difficulty*Violence*R2d4d + feedback.NA,
                        left=1, right=9, data=dat)
-summary(censModel2.1)
-# 2-ways, dropping 2d4d & 3-ways
+summary(censModel2.1) # some p = .04 interactions
+# 2x2 ANOVA, dropping 2d4d & 3-ways
 censModel3 = censReg(DV ~ Difficulty*Violence, left=1, right=9, data=dat)
 summary(censModel3)
 # adding covariate
@@ -260,17 +256,17 @@ summary(censModel3.1)
 # Logistic regression w/ binned DV ----
 dat$DVbin = ifelse(dat$DV == 9, 1, 0)
 # With L2d4d
-model1 = glm(DVbin ~ Difficulty*Violence*L2d4d, family=binomial(link="logit"), data=dat)
+model1 = glm(DVbin ~ Difficulty*Violence*L2d4d_std, family=binomial(link="logit"), data=dat)
 summary(model1)
 # With L2d4d + covariate
-model1.1 = glm(DVbin ~ Difficulty*Violence*L2d4d + feedback.NA, 
+model1.1 = glm(DVbin ~ Difficulty*Violence*L2d4d_std + feedback.NA, 
                family=binomial(link="logit"), data=dat)
 summary(model1.1)
 # With R2d4d
-model2 = glm(DVbin ~ Difficulty*Violence*R2d4d, family=binomial(link="logit"), data=dat)
+model2 = glm(DVbin ~ Difficulty*Violence*R2d4d_std, family=binomial(link="logit"), data=dat)
 summary(model2)
 # With R2d4d + covariate
-model2.1 = glm(DVbin ~ Difficulty*Violence*R2d4d + feedback.NA,
+model2.1 = glm(DVbin ~ Difficulty*Violence*R2d4d_std + feedback.NA,
                family=binomial(link="logit"), data=dat)
 summary(model2.1)
 # 2x2 ANOVA

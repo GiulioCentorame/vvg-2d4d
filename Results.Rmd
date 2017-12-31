@@ -40,27 +40,33 @@ fetchStats = function(x, df) {
 ```
 
 ## Manipulation Check
-*Game manipulation.* Participant ratings on the post-questionnaires were submitted to 2 (Violence) x 2 (Difficulty) ANOVA. The manipulation was highly effective: participants indicated that the violent game (M = `r vioMeans[2] %>% signif(2)`; SD = `r vioSDs[2] %>% signif(2)`) was much more violent than the nonviolent game (M = `r vioMeans[1] %>% signif(2)`, SD = `r vioSDs[1] %>% signif(2)`; `r reportCI(smd = (vioMeans[2] - vioMeans[1]) / pool.sd(vioSDs, vioN), n.1 = vioN[1], n.2 = vioN[2])`). 
+*Game manipulation.* Participant ratings on the post-questionnaires were submitted to 2 (Violence) × 2 (Difficulty) ANOVA. The manipulation was highly effective: participants indicated that the violent game (M = `r vioMeans[2] %>% signif(2)`; SD = `r vioSDs[2] %>% signif(2)`) was much more violent than the nonviolent game (M = `r vioMeans[1] %>% signif(2)`, SD = `r vioSDs[1] %>% signif(2)`; `r reportCI(smd = (vioMeans[2] - vioMeans[1]) / pool.sd(vioSDs, vioN), n.1 = vioN[1], n.2 = vioN[2])`). 
 
 *Provocation.* Mean evaluations of the participants’ interactions with the partner were also assessed. Participants generally indicated that they were irritated (M = `r mean(dat$irritated, na.rm=T) %>% signif(2)`, SD = `r sd(dat$irritated, na.rm=T) %>% signif(2)`), angered (M = `r mean(dat$angered, na.rm=T) %>% signif(2)`, SD = `r sd(dat$angered, na.rm=T) %>% signif(2)`), and annoyed (M = `r mean(dat$annoyed, na.rm=T) %>% signif(2)`, SD = `r sd(dat$annoyed, na.rm=T) %>% signif(2)`) by their partner. Furthermore, they were neither happy (M = `r mean(dat$happy, na.rm=T) %>% signif(2)`, SD = `r sd(dat$happy, na.rm=T) %>% signif(2)`) nor pleased (M = `r mean(dat$pleased, na.rm=T) %>% signif(2)`, SD = `r sd(dat$pleased, na.rm=T) %>% signif(2)`) with their partner and found the feedback unhelpful (M = `r mean(dat$helpful, na.rm=T) %>% signif(2)`, SD = `r sd(dat$helpful, na.rm=T) %>% signif(2)`).
 
-To determine whether the coldpressor dependent variable was a sensitive measure of aggression, I tested whether these participant evaluations were related to coldpressor assignments. First, a principal component was extracted from participants’ six ratings of the interaction, described above. The first component accounted for 54% of the variance and had the expected pattern of loadings: .51, .45, and .50 for irritation, anger, and annoyance, -.35, -.22, and -.33 for happiness, helpfulness, and pleasure. This component, hereafter referred to as composite irritation, was then used as a linear predictor of coldpressor assignment. The relationship was moderately strong, `r report_t(check2, "feedback.NA"); F2R(summary(check2)$fstatistic[1], check2$df.residual+2)`, suggesting that the coldpressor measure was indeed influenced by participants’ intent to aggress. A scatterplot and loess regression line are provided in Figure 1.
+To determine whether the coldpressor dependent variable was a sensitive measure of aggression, we tested whether these participants more irritated with their partners gave higher coldpressor assignments. Parallel analysis suggested a two-factor solution for participants' ratings of their interaction with their partner. Factors were extracted using oblimin rotation. The first factor accounted for 52% of the variance and had the expected pattern of loadings: .77, .76, and .67 for irritation, anger, and annoyance, -.25, .02, and .02 for happiness, helpfulness, and pleasure. This irritation factor was then used as a linear predictor of coldpressor assignment. The relationship was moderately strong, `r report_t(check2, "feedback.NA", "r", 275/2, 275/2)`, suggesting that the coldpressor measure was indeed influenced by participants’ intent to aggress. A scatterplot and loess regression line are provided in Figure 1.
 
-A 2 (Violence) x 2 (Difficulty) ANOVA was conducted to determine whether the game played influenced participants’ ratings of the interaction. Effects were small and not statistically significant, suggesting that the game played had a minimal influence on participants’ composite irritation. See Table 1 for this ANOVA output.
+A 2 (Violence) × 2 (Difficulty) ANOVA was conducted to determine whether the game played influenced participants’ ratings of the interaction. Effects were small and not statistically significant, suggesting that the game played had a minimal influence on participants’ composite irritation. See Table 1 for this ANOVA output.
+
+```{r}
+lm(feedback.NA ~  Violence * Difficulty, data = dat) %>%
+  summary
+```
+
 
 ###Conventional General Linear Models.
-General linear models were used to look for main effects and interactions of game difficulty, game violence, and 2D:4D ratio. Two models were used to look for effects of left and right 2D:4D ratio, separately. Factors were contrast-coded and 2D:4D ratios were centered to preserve orthogonality of parameter estimates.
+General linear models were used to look for main effects and interactions of game difficulty, game violence, and 2D:4D ratio. Two models were used to look for effects of left and right 2D:4D ratio, separately. Factors were contrast-coded and 2D:4D ratios were standardized to preserve orthogonality of parameter estimates.
 
 ```{r, echo = F, include=F, warning=F}
 summary(m1)
 summary(m2)
 ```
 
-Neither model found any significant effects. Neither left-hand 2D:4D (`r report_t(m1, "L2d4d_c")`) nor right-hand 2D:4D (`r report_t(m2, "R2d4d_c")`) had any significant main effect on aggressive behavior. No higher-order interactions involving 2D:4D ratio of either hand were statistically significant. Full model output is summarized in [SUPPLEMENTARY?] Tables [X1 and X2].
+Neither model found any significant effects. Neither left-hand 2D:4D (`r report_t(m1, "L2d4d_c", "r", 275/2, 275/2)`) nor right-hand 2D:4D (`r report_t(m2, "R2d4d_c", "r", 275/2, 275/2)`) had any significant main effect on aggressive behavior. No higher-order interactions involving 2D:4D ratio of either hand were statistically significant. Full model output is summarized in [SUPPLEMENTARY?] Tables [X1 and X2].
 
-Ignoring 2D:4D, a 2 Difficulty × 2 Violence ANOVA did not find significant effects of experimental assignment. Effects of game violence (`r report_t(m1, "Violence1")`), game difficulty (`r report_t(m1, "Difficulty1")`), and their interaction (`r report_t(m1, "Difficulty1:Violence1")`) were small and not statistically significant.
+Ignoring 2D:4D, a 2 Difficulty × 2 Violence ANOVA did not find significant effects of experimental assignment. Effects of game violence (`r report_t(m1, "Violence1", "d", 136, 139)`), game difficulty (`r report_t(m1, "Difficulty1", "d", 138, 137)`), and their interaction (`r report_t(m1, "Difficulty1:Violence1", "d", 69+70, 67+69)`) were small and not statistically significant.
 
-The earlier manipulation and sensitivity check indicated that much of the variance in aggression could be predicted by irritation with the partner. Because this irritation was generally independent of the experimental condition, this irritation has potential value as a covariate in analysis. However, adding this as a covariate did not increase the observed effect size. The effect of violence was `r report_t(m3.5, "Violence1")`, the effect of difficulty was `r report_t(m3.5, "Difficulty1")`, and their interaction was `r report_t(m3.5, "Difficulty1:Violence1")`.
+The earlier manipulation and sensitivity check indicated that much of the variance in aggression could be predicted by irritation with the partner. Because this irritation was generally independent of the experimental condition, this irritation has potential value as a covariate in analysis. However, adding this as a covariate did not increase the observed effect size. The effect of violence was `r report_t(m3.5, "Violence1", "d", 136, 139)`, the effect of difficulty was `r report_t(m3.5, "Difficulty1", "d", 138, 137)`, and their interaction was `r report_t(m3.5, "Difficulty1:Violence1",  "d", 69+70, 67+69)`.
 
 ###Bayesian ANOVA. 
 Models were compared using the BayesFactor package for R (Morey & Rouder, 2014). The scale of the effect size under the alternative hypothesis was specified as *d* ~ Cauchy(.4). Models were generated to represent all possible combinations of main effects and/or interactions. Models including interactions were constrained to also include lower-order interactions and main effects. All models were compared to a null-hypothesis model including no effects. Bayes factors involving 2D:4D were similar regardless of whether the right or left hand was used; to be conservative, I report the Bayes factor closer to 1.
@@ -72,7 +78,19 @@ When composite irritation was added as a predictor, Bayes factor strongly favore
 ###Non-local Bayesian prior. 
 In the Bayesian hypothesis tests provided above, we use a non-directional, non-specific alternative hypothesis scaled roughly to the magnitude of the expected effect. While this is a useful hypothesis to test, it would also be useful to compare the obtained results against a more specific alternative hypothesis representing the effect as estimated from previous meta-analysis, δ = .43 (.35, .52) (Anderson et al., 2010).
 
-The main effect of Violence was d = 0.09 (-0.17, 0.35). An online Bayes factor calculator (Dienes, 2008) was used to compare the evidence for H0: δ = 0 relative to H1: δ = .43 (.35, .52). The obtained Bayes factor substantially preferred the null, B01 = 17.7.
+The main effect of Violence was d = 0.11 [-0.13, 0.35]. An online Bayes factor calculator (Dienes, 2008) was used to compare the evidence for H0: δ = 0 relative to H1: δ = .43 [.35, .52]. The obtained Bayes factor substantially preferred the null, B01 = 14.2.
+
+```{r}
+source("bf_calculator.R")
+sd_obs <- (.35-.11)/1.96
+sd_and <- (.52-.43)/1.96
+bf_nonlocal <- Bf(sd = sd_obs,
+                  obtained = 0.11,
+                  meanoftheory = 0.43,
+                  sdtheory = sd_and)$BayesFactor
+1/bf_nonlocal
+```
+
 
 ### Supplementary methods
 Coldpressor assignments were found to be non-normally distributed. To address this non-normality, the data were tested in two additional models to attempt to deal with the spike at 9. Censored regression was used to attempt to model responses greater than 9, and logistic regression was used to model the probability of a 9 response vs. all other responses. These methods did not yield substantively different conclusions (i.e., no parameters were significant). See the supplement for details.
