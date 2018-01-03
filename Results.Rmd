@@ -2,7 +2,9 @@
 title: "Results"
 author: "Joe Hilgard"
 date: "March 20, 2016"
-output: word_document
+output: 
+  word_document:
+    reference_docx: template_0.docx
 ---
 
 ``` {r setup, include = F}
@@ -13,6 +15,7 @@ library(tidyverse)
 library(BayesFactor)
 library(broom)
 library(hilgard)
+source("bf_grab.R")
 
 load(".RData")
 
@@ -49,32 +52,41 @@ To determine whether the coldpressor dependent variable was a sensitive measure 
 A 2 (Violence) × 2 (Difficulty) ANOVA was conducted to determine whether the game played influenced participants’ ratings of the interaction. Effects were small and not statistically significant, suggesting that the game played had a minimal influence on participants’ composite irritation. See Table 1 for this ANOVA output.
 
 ```{r}
+dir.create("tables")
 lm(feedback.NA ~  Violence * Difficulty, data = dat) %>%
-  summary
+  tidy %>% 
+  write.csv("tables/Table1.csv")
 ```
-
 
 ###Conventional General Linear Models.
-General linear models were used to look for main effects and interactions of game difficulty, game violence, and 2D:4D ratio. Two models were used to look for effects of left and right 2D:4D ratio, separately. Factors were contrast-coded and 2D:4D ratios were standardized to preserve orthogonality of parameter estimates.
+General linear models were used to look for main effects and interactions of game difficulty, game violence, and 2D:4D ratio. Two models were used to look for effects of left and right 2D:4D ratio separately. Factors were contrast-coded and 2D:4D ratios were standardized to preserve orthogonality of parameter estimates.
 
-```{r, echo = F, include=F, warning=F}
-summary(m1)
-summary(m2)
+```{r, echo=F, include=F}
+dat %>% 
+  group_by(Violence, Difficulty) %>% 
+  summarize(M = mean(DV, na.rm = T), sd = sd(DV, na.rm = T)) %>% 
+  write.csv("tables/cell_means.csv")
 ```
 
-Neither model found any significant effects. Neither left-hand 2D:4D (`r report_t(m1, "L2d4d_c", "r", 275/2, 275/2)`) nor right-hand 2D:4D (`r report_t(m2, "R2d4d_c", "r", 275/2, 275/2)`) had any significant main effect on aggressive behavior. No higher-order interactions involving 2D:4D ratio of either hand were statistically significant. Full model output is summarized in [SUPPLEMENTARY?] Tables [X1 and X2].
+
+```{r, echo = F, include=F}
+tidy(m1) %>% write.csv("tables/table2.csv")
+tidy(m2) %>% write.csv("tables/table3.csv")
+```
+
+Neither model found any significant effects. Neither left-hand 2D:4D (`r report_t(m1, "L2d4d_std", "r", 275/2, 275/2)`) nor right-hand 2D:4D (`r report_t(m2, "R2d4d_std", "r", 275/2, 275/2)`) had any significant main effect on aggressive behavior. No higher-order interactions involving 2D:4D ratio of either hand were statistically significant. Full model output is summarized in Tables 2 and 3.
 
 Ignoring 2D:4D, a 2 Difficulty × 2 Violence ANOVA did not find significant effects of experimental assignment. Effects of game violence (`r report_t(m1, "Violence1", "d", 136, 139)`), game difficulty (`r report_t(m1, "Difficulty1", "d", 138, 137)`), and their interaction (`r report_t(m1, "Difficulty1:Violence1", "d", 69+70, 67+69)`) were small and not statistically significant.
 
 The earlier manipulation and sensitivity check indicated that much of the variance in aggression could be predicted by irritation with the partner. Because this irritation was generally independent of the experimental condition, this irritation has potential value as a covariate in analysis. However, adding this as a covariate did not increase the observed effect size. The effect of violence was `r report_t(m3.5, "Violence1", "d", 136, 139)`, the effect of difficulty was `r report_t(m3.5, "Difficulty1", "d", 138, 137)`, and their interaction was `r report_t(m3.5, "Difficulty1:Violence1",  "d", 69+70, 67+69)`.
 
 ###Bayesian ANOVA. 
-Models were compared using the BayesFactor package for R (Morey & Rouder, 2014). The scale of the effect size under the alternative hypothesis was specified as *d* ~ Cauchy(.4). Models were generated to represent all possible combinations of main effects and/or interactions. Models including interactions were constrained to also include lower-order interactions and main effects. All models were compared to a null-hypothesis model including no effects. Bayes factors involving 2D:4D were similar regardless of whether the right or left hand was used; to be conservative, I report the Bayes factor closer to 1.
+Models were compared using the BayesFactor package for R (Morey & Rouder, 2014). The scale of the effect size under the alternative hypothesis was specified as *d* ~ Cauchy(.4). Models were generated to represent all possible combinations of main effects and/or interactions. Models including interactions were constrained to also include lower-order interactions and main effects. All models were compared to a null-hypothesis model including no effects. 
 
-Of all the models, the null-hypothesis model was best supported by the data. Models of main effects of Violence, Difficulty, or 2D:4D were each outperformed by the null model (Bayes factors = `r bfList[1] %>% round(2)`, `r bfList[2] %>% round(2)`, and `r min(c(1/exp(bf3.4@bayesFactor$bf), 1/exp(bf4.4@bayesFactor$bf))) %>% round(2)` in favor of the null, respectively). 
-Higher-order interactions were not supported by the data, either. Evidence was ambiguous regarding a Violence × Difficulty interaction (BF = `r bfList[4]/bfList[3]` favoring the null). Neither violence nor difficuly interacted with 2d4d (INSERT STATS), and the 3-way interaction was not supported.
+Of all the models, the null-hypothesis model was best supported by the data. Models of main effects of Violence, Difficulty, left-hand 2D:4D, or right-hand 2D:4D were each outperformed by the null model (Bayes factors = `r bfList[1] %>% round(2)`, `r bfList[2] %>% round(2)`, `r (1/exp(bf3.4@bayesFactor$bf)) %>% round(2)`, and `r (1/exp(bf4.4@bayesFactor$bf)) %>% round(2)` in favor of the null, respectively). 
+Higher-order interactions were not supported by the data, either. Evidence was ambiguous regarding a Violence × Difficulty interaction (BF = `r bfList[4]/bfList[3] %>% round(2)` favoring the null). Neither violence nor difficuly interacted with 2D:4D of the left hand (BF = `r bf_grab(bf01_vio_l2d4d)`, `r bf_grab(bf01_diff_l2d4d)`, respectively) or 2D:4D of the right hand (BF = `r bf_grab(bf01_vio_r2d4d)`, `r bf_grab(bf01_diff_r2d4d)`).  The 3-way interaction was not supported (left-hand BF = `r bf_grab(bf01_3way_l2d4d)`, right-hand BF = `r bf_grab(bf01_3way_r2d4d)`).
 
-Composite irritation was added to the model as a predictor. Composite irritation was strongly supported by the evidence (B = `r exp(bf7.4@bayesFactor$bf) %>% round(2)`). However, addition of this covariate did not improve the strength of evidence for main effects of violence (BF = `r bf_grab(bf01_vio_cov)`), difficulty (BF = `r bf_grab(bf01_diff_cov)`), or 2d4d (BF = `r bf_grab(bf01_l2d4d_cov)`, left hand; BF = `r bf_grab(bf01_r2d4d_cov)`, right hand).
+Composite irritation was added to the model as a predictor. Composite irritation was strongly supported by the evidence (B = `r bf_grab(bf7.4) %>% round(2)`). However, addition of this covariate did not improve the strength of evidence for main effects of violence (BF = `r bf_grab(bf01_vio_cov)`), difficulty (BF = `r bf_grab(bf01_diff_cov)`), or 2d4d (BF = `r bf_grab(bf01_l2d4d_cov)`, left hand; BF = `r bf_grab(bf01_r2d4d_cov)`, right hand).
 
 This indicates that variance in coldpressor duration could be predicted by composite irritation but not by game condition.
 
@@ -83,7 +95,7 @@ In the Bayesian hypothesis tests provided above, we use a non-directional, non-s
 
 The main effect of Violence was d = 0.11 [-0.13, 0.35]. An online Bayes factor calculator (Dienes, 2008) was used to compare the evidence for H0: δ = 0 relative to H1: δ = .43 [.35, .52]. The obtained Bayes factor substantially preferred the null, B01 = 14.2.
 
-```{r}
+```{r, include=FALSE}
 source("bf_calculator.R")
 sd_obs <- (.35-.11)/1.96
 sd_and <- (.52-.43)/1.96

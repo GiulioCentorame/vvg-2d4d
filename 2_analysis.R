@@ -102,8 +102,8 @@ summary(check2)
 
 check2.1 = lm(DV ~ feedback.PA + feedback.NA, data=dat)
 summary(check2.1)
-t2R(tstat = 3.226, 
-    N     = summary(check2)$df[2]+3)
+# compute.es::tes(tstat = 3.226, 
+#     N     = summary(check2)$df[2]+3)
 
 # Irritation not fostered by game violence
 lm(feedback.NA ~  Violence * Difficulty, data = dat) %>%
@@ -144,8 +144,8 @@ m3 = lm(DV ~ Difficulty * Violence, data = dat,
         contrasts = list(Difficulty = "contr.sum",
                          Violence = "contr.sum"))
 summary(m3)
-t2R(.963, 291)
-t2R(1.13, 291)
+#compute.es::tes(.963, 291)
+#compute.es::tes(1.13, 291)
 # I wonder: how do I generate a p-value against H0: r = .21?
 # (z.obs - z.H0) / se(z) ~ z
 (atanh(.05655639) - atanh(.21)) / (1/sqrt(294-3))
@@ -154,24 +154,24 @@ pnorm(-2.67, lower.tail=T)
 m3.1 = lm(DV ~ Violence, data=dat[dat$Difficulty == "Easy",])
 m3.2 = lm(DV ~ Violence, data=dat[dat$Difficulty == "Hard",])
 summary(m3.1)
-t2R(1.788, 145)
+# compute.es::tes(1.788, 145)
 summary(m3.2)
-t2R(.422, 148)
+# compute.es::tes(.422, 148)
 
 # Adding composite irritation component as covariate
 m3.5 = lm(DV ~ Difficulty * Violence + feedback.NA, data=dat,
           contrasts = list(Difficulty = "contr.sum",
                            Violence = "contr.sum"))
 summary(m3.5) # soaks up a lot of variance but effect of violence still not significant
-t2R(.735, 269)
+# compute.es::tes(.735, 269)
 
 # 2d4d alone:
 m4 = lm(DV ~ L2d4d, data = dat)
 summary(m4)
-t2R(-.729, 272)
+# compute.es::tes(-.729, 272)
 m5 = lm(DV ~ R2d4d, data = dat)
 summary(m5)
-t2R(-.35, 273)
+# compute.es::tes(-.35, 273)
 
 # Gameplay variables ----
 dat %>% 
@@ -186,6 +186,7 @@ dat %>%
   filter(complete.cases(.)) %>% 
   regressionBF(DV ~ Game.1 + Game.2 + Game.3 + Game.4 + Game.5 + Game.6, data = .) %>% 
   sort()
+
 # Bayesian models of primary outcome ----
 # ANOVA
 bf_2x2 = anovaBF(DV ~ Violence*Difficulty, data=dat, rscaleFixed=.4, iterations=10^5)
@@ -193,11 +194,13 @@ bf_2x2
 1/bf_2x2
 bfList = 1/exp(bf_2x2@bayesFactor$bf)
 # 2d4d
-bf3.4 = lmBF(DV ~ L2d4d, data=set, rscaleFixed=.4, iterations=10^5)
-bf4.4 = lmBF(DV ~ R2d4d, data=set, rscaleFixed=.4, iterations=10^5)
+bf3.4 = filter(dat, !is.na(L2d4d)) %>% 
+  lmBF(DV ~ L2d4d, data=., rscaleFixed=.4, iterations=10^5)
+bf4.4 = filter(dat, !is.na(R2d4d)) %>% 
+  lmBF(DV ~ R2d4d, data=., rscaleFixed=.4, iterations=10^5)
 
 # test for support of interactions. l2d4d
-set = dat %>% filter(!is.na(dat$L2d4d))
+set = dat %>% filter(!is.na(L2d4d))
 additive <- lmBF(DV ~ Violence + Difficulty + L2d4d_std, 
                  data = set, rscaleFixed = .4)
 int_vio_l2d4d <- lmBF(DV ~ Violence + Difficulty + L2d4d_std + Violence*L2d4d_std, 
