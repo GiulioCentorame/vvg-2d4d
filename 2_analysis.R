@@ -188,47 +188,75 @@ dat %>%
   sort()
 # Bayesian models of primary outcome ----
 # ANOVA
-bf1 = anovaBF(DV ~ Violence*Difficulty, data=dat, rscaleFixed=.4, iterations=10^5)
-bf1
-1/bf1
-bfList = 1/exp(bf1@bayesFactor$bf)
-
-# linear models considering L2d4d
-set = dat %>% filter(!is.na(dat$L2d4d))
-bf3 = lmBF(DV ~ Violence*Difficulty*L2d4d, data=set, rscaleFixed=.4, iterations=10^5)
-bf3.1 = lmBF(DV ~ Difficulty*L2d4d + Violence*L2d4d, data=set, rscaleFixed=.4, iterations=10^5)
-bf3.2 = lmBF(DV ~ Difficulty*L2d4d, data=set, rscaleFixed=.4, iterations=10^5)
-bf3.3 = lmBF(DV ~ Violence*L2d4d, data=set, rscaleFixed=.4, iterations=10^5)
+bf_2x2 = anovaBF(DV ~ Violence*Difficulty, data=dat, rscaleFixed=.4, iterations=10^5)
+bf_2x2
+1/bf_2x2
+bfList = 1/exp(bf_2x2@bayesFactor$bf)
+# 2d4d
 bf3.4 = lmBF(DV ~ L2d4d, data=set, rscaleFixed=.4, iterations=10^5)
-plot(c(bf3, bf3.1, bf3.2, bf3.3, bf3.4), marginExpand = .3)
-# winner is null. odds are 4.4 : 1 over l2d4d
+bf4.4 = lmBF(DV ~ R2d4d, data=set, rscaleFixed=.4, iterations=10^5)
+
+# test for support of interactions. l2d4d
+set = dat %>% filter(!is.na(dat$L2d4d))
+additive <- lmBF(DV ~ Violence + Difficulty + L2d4d_std, 
+                 data = set, rscaleFixed = .4)
+int_vio_l2d4d <- lmBF(DV ~ Violence + Difficulty + L2d4d_std + Violence*L2d4d_std, 
+     data = set, rscaleFixed = .4)
+int_dif_l2d4d <- lmBF(DV ~ Violence + Difficulty + L2d4d_std + Difficulty*L2d4d_std, 
+                      data = set, rscaleFixed = .4)
+all_2s <- lmBF(DV ~ Violence*Difficulty + Violence*L2d4d_std + Difficulty*L2d4d_std, 
+               data = set, rscaleFixed = .4)
+full <- lmBF(DV ~ Violence*Difficulty*L2d4d_std, data = set, rscaleFixed = .4)
+bf01_vio_l2d4d <- additive/int_vio_l2d4d # evidence against viox2d4d, 3.76
+bf01_diff_l2d4d <- additive/int_dif_l2d4d # evidence against difx2d4d, 4.50
+bf01_3way_l2d4d <- all_2s/full # evidence against 3-way, 3.40
 
 # linear models considering R2d4d
 set = dat %>% filter(!is.na(dat$R2d4d))
-bf4 = lmBF(DV ~ Violence*Difficulty*R2d4d, data=set, rscaleFixed=.4, iterations=10^5)
-bf4.1 = lmBF(DV ~ Difficulty*R2d4d + Violence*R2d4d, data=set, rscaleFixed=.4, iterations=10^5)
-bf4.2 = lmBF(DV ~ Difficulty*R2d4d, data=set, rscaleFixed=.4, iterations=10^5)
-bf4.3 = lmBF(DV ~ Violence*R2d4d, data=set, rscaleFixed=.4, iterations=10^5)
-bf4.4 = lmBF(DV ~ R2d4d, data=set, rscaleFixed=.4, iterations=10^5)
-plot(c(bf4, bf4.1, bf4.2, bf4.3, bf4.4), marginExpand = .3)
-1/bf4.4 # bf is 6.5 : 1 for the null
+additive <- lmBF(DV ~ Violence + Difficulty + R2d4d_std, 
+                 data = set, rscaleFixed = .4)
+int_vio_R2d4d <- lmBF(DV ~ Violence + Difficulty + R2d4d_std + Violence*R2d4d_std, 
+                      data = set, rscaleFixed = .4)
+int_dif_R2d4d <- lmBF(DV ~ Violence + Difficulty + R2d4d_std + Difficulty*R2d4d_std, 
+                      data = set, rscaleFixed = .4)
+all_2s <- lmBF(DV ~ Violence*Difficulty + Violence*R2d4d_std + Difficulty*R2d4d_std, 
+               data = set, rscaleFixed = .4)
+full <- lmBF(DV ~ Violence*Difficulty*R2d4d_std, data = set, rscaleFixed = .4)
+bf01_vio_r2d4d <- additive/int_vio_R2d4d # evidence against viox2d4d, 4.91
+bf01_diff_r2d4d <- additive/int_dif_R2d4d # evidence against difx2d4d, 4.38
+bf01_3way_r2d4d <- all_2s/full # evidence against 3-way, 3.21
 
 # linear models considering composite irritation covariate
 set2 = dat %>% 
-  select(DV, Violence, Difficulty, feedback.NA) %>% 
+  select(DV, Violence, Difficulty, feedback.NA, L2d4d_std) %>% 
   filter(complete.cases(.))
 bf7 = lmBF(DV ~ Violence*Difficulty + feedback.NA, data=set2, rscaleFixed=.4, iterations=10^5)
 bf7.1 = lmBF(DV ~ Violence + Difficulty + feedback.NA, data=set2, rscaleFixed=.4, iterations=10^5)
 bf7.2 = lmBF(DV ~ Violence + feedback.NA, data=set2, rscaleFixed=.4, iterations=10^5)
 bf7.3 = lmBF(DV ~ Difficulty + feedback.NA, data=set2, rscaleFixed=.4, iterations=10^5)
 bf7.4 = lmBF(DV ~ feedback.NA, data=set2, rscaleFixed=.4, iterations=10^5)
+bf7.5 = lmBF(DV ~ feedback.NA + L2d4d_std, data=set2, rscaleFixed=.4, iterations=10^5)
+
+# right-hand
+set3 = dat %>% 
+  select(DV, Violence, Difficulty, feedback.NA, R2d4d_std) %>% 
+  filter(complete.cases(.))
+bf7.7 = lmBF(DV ~ feedback.NA, data=set3, rscaleFixed=.4, iterations=10^5)
+bf7.6 = lmBF(DV ~ feedback.NA + R2d4d_std, data=set3, rscaleFixed=.4, iterations=10^5)
+
 # Results
 c(bf7, bf7.1, bf7.2, bf7.3, bf7.4)
 plot(c(bf7, bf7.1, bf7.2, bf7.3, bf7.4))
 # Results relative to covariate-only model
 c(bf7, bf7.1, bf7.2, bf7.3, bf7.4)/bf7.4
 1/(c(bf7, bf7.1, bf7.2, bf7.3, bf7.4)/bf7.4)
-plot(c(bf7, bf7.1, bf7.2, bf7.3, bf7.4)/bf7.4)
+plot(c(bf7, bf7.1, bf7.2, bf7.3)/bf7.4)
+
+bf01_vio_cov <- bf7.4/bf7.2
+bf01_diff_cov <- bf7.4/bf7.3
+bf01_l2d4d_cov <- bf7.4/bf7.5
+bf01_2way_cov <- bf7.1/bf7
+bf01_r2d4d_cov <- bf7.7/bf7.6
 
 # Censored-from-above analysis ----
 library(censReg)
@@ -278,3 +306,8 @@ model3.5 = glm(DVbin ~ Difficulty*Violence + feedback.NA,
 summary(model3.5)
 
 save.image()
+
+# Kruskal-wallace tests aren't significant ----
+kruskal.test(DV ~ Violence, data = dat)
+kruskal.test(DV ~ Difficulty, data = dat)
+kruskal.test(DV ~ interaction(Violence, Difficulty), data = dat)

@@ -28,12 +28,6 @@ ggplot(dat, aes(x=Violence, y=DV)) +
   scale_x_discrete("Condition") +
   scale_y_continuous("Aggression")
 
-
-
-  theme(legend.position="none",
-        axis.text.x = element_text(color="black", size=12)
-  )
-  
 datSum <- dat %>% 
   group_by(Violence, Difficulty) %>% 
   summarise(mean = mean(DV, na.rm = T), 
@@ -54,6 +48,16 @@ ggplot(datSum, aes(x = Violence)) +
   facet_wrap(~Difficulty) +
   scale_y_continuous("Aggression")
 
+# # Adding mean and CI to histogram is hideous
+# ggplot(dat, aes(x=DV)) + 
+#   geom_bar() +
+#   facet_wrap(~Violence+Difficulty, nrow=2) +
+#   scale_x_discrete("Coldpressor Assignment", limits = c(1:9)) +
+#   theme(strip.text.x = element_text(size = 12),
+#         axis.title.x = element_text(size = 14)) +
+#   geom_vline(aes(xintercept = mean), data = datSum) +
+#   geom_vline(aes(xintercept = ll), data = datSum) +
+#   geom_vline(aes(xintercept = ul), data = datSum)
 
 # Manipulation check ----
 # Violent content
