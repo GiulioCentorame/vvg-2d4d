@@ -42,16 +42,18 @@ fetchStats = function(x, df) {
 
 ```
 
+
+
 ## Manipulation Check
-*Game manipulation.* Participant ratings on the post-questionnaires were submitted to 2 (Violence) × 2 (Difficulty) ANOVA. The manipulation was highly effective: participants indicated that the violent game (M = `r vioMeans[2] %>% signif(2)`; SD = `r vioSDs[2] %>% signif(2)`) was much more violent than the nonviolent game (M = `r vioMeans[1] %>% signif(2)`, SD = `r vioSDs[1] %>% signif(2)`; `r reportCI(smd = (vioMeans[2] - vioMeans[1]) / pool.sd(vioSDs, vioN), n.1 = vioN[1], n.2 = vioN[2])`). 
+*Game manipulation.* Participant ratings on the post-questionnaires were submitted to 2 (Violence) × 2 (Difficulty) ANOVA. The manipulation was highly effective: participants indicated that the violent game (*M* = `r vioMeans["Violent"] %>% signif(2)` (`r vioSDs["Violent"] %>% signif(2)`)) was much more violent than the nonviolent game (*M* = `r vioMeans["Less Violent"] %>% signif(2)` (`r vioSDs["Less Violent"] %>% signif(2)`); `r reportCI(smd = (vioMeans["Violent"] - vioMeans["Less Violent"]) / pool.sd(vioSDs, vioN), n.1 = vioN[2], n.2 = vioN[1])`). 
 
 *Provocation.* Mean evaluations of the participants’ interactions with the partner were also assessed. Participants generally indicated that they were irritated (M = `r mean(dat$irritated, na.rm=T) %>% signif(2)`, SD = `r sd(dat$irritated, na.rm=T) %>% signif(2)`), angered (M = `r mean(dat$angered, na.rm=T) %>% signif(2)`, SD = `r sd(dat$angered, na.rm=T) %>% signif(2)`), and annoyed (M = `r mean(dat$annoyed, na.rm=T) %>% signif(2)`, SD = `r sd(dat$annoyed, na.rm=T) %>% signif(2)`) by their partner. Furthermore, they were neither happy (M = `r mean(dat$happy, na.rm=T) %>% signif(2)`, SD = `r sd(dat$happy, na.rm=T) %>% signif(2)`) nor pleased (M = `r mean(dat$pleased, na.rm=T) %>% signif(2)`, SD = `r sd(dat$pleased, na.rm=T) %>% signif(2)`) with their partner and found the feedback unhelpful (M = `r mean(dat$helpful, na.rm=T) %>% signif(2)`, SD = `r sd(dat$helpful, na.rm=T) %>% signif(2)`).
 
-To determine whether the coldpressor dependent variable was a sensitive measure of aggression, we tested whether these participants more irritated with their partners gave higher coldpressor assignments. Parallel analysis suggested a two-factor solution for participants' ratings of their interaction with their partner. Factors were extracted using oblimin rotation. The first factor accounted for 52% of the variance and had the expected pattern of loadings: .77, .76, and .67 for irritation, anger, and annoyance, -.25, .02, and .02 for happiness, helpfulness, and pleasure. This irritation factor was then used as a linear predictor of coldpressor assignment. The relationship was moderately strong, `r report_t(check2, "feedback.NA", "r", 275/2, 275/2)`, suggesting that the coldpressor measure was indeed influenced by participants’ intent to aggress. A scatterplot and loess regression line are provided in Figure 1.
+To determine whether the coldpressor dependent variable was a sensitive measure of aggression, we tested whether these participants more provoked by the feedback gave higher coldpressor assignments. Parallel analysis suggested a two-factor solution for participants' ratings of their interaction with their partner. Factors were extracted using oblimin rotation. The first factor accounted for 52% of the variance and had the expected pattern of loadings: .77, .76, and .67 for irritation, anger, and annoyance, -.25, .02, and .02 for happiness, helpfulness, and pleasure. This provocation factor was then used as a linear predictor of coldpressor assignment. The relationship was moderately strong, `r report_t(check2, "feedback.NA", "r", 275/2, 275/2)`, suggesting that the coldpressor measure was indeed influenced by participants’ intent to aggress. A scatterplot and loess regression line are provided in Figure 1.
 
-A 2 (Violence) × 2 (Difficulty) ANOVA was conducted to determine whether the game played influenced participants’ ratings of the interaction. Effects were small and not statistically significant, suggesting that the game played had a minimal influence on participants’ composite irritation. See Table 1 for this ANOVA output.
+A 2 (Violence) × 2 (Difficulty) ANOVA was conducted to determine whether the game played influenced participants’ ratings of the interaction. Effects were small and not statistically significant (violence, `r report_t(m.provoke, "Violence1", "d", 136, 139)`; difficulty, `r report_t(m.provoke, "Difficulty1", "d", 138, 137)`; Violence × Difficulty, `r report_t(m.provoke, "Violence1:Difficulty1", "d", 69+70, 67+69)` ), suggesting that the game played had a minimal influence on participants’ provocation. 
 
-```{r}
+```{r, include = F}
 dir.create("tables")
 lm(feedback.NA ~  Violence * Difficulty, data = dat) %>%
   tidy %>% 
@@ -59,41 +61,39 @@ lm(feedback.NA ~  Violence * Difficulty, data = dat) %>%
 ```
 
 ###Conventional General Linear Models.
-General linear models were used to look for main effects and interactions of game difficulty, game violence, and 2D:4D ratio. Two models were used to look for effects of left and right 2D:4D ratio separately. Factors were contrast-coded and 2D:4D ratios were standardized to preserve orthogonality of parameter estimates.
+General linear models were used to look for main effects and interactions of game difficulty, game violence, and 2D:4D ratio. Two models were used to look for effects of left and right 2D:4D ratio separately. Factors were contrast-coded and 2D:4D ratios were standardized to preserve orthogonality of parameter estimates. Cell means and SDs are provided in Table 1
 
 ```{r, echo=F, include=F}
 dat %>% 
   group_by(Violence, Difficulty) %>% 
-  summarize(M = mean(DV, na.rm = T), sd = sd(DV, na.rm = T)) %>% 
+  dplyr::summarize(M = mean(DV, na.rm = T), sd = sd(DV, na.rm = T)) %>% 
   write.csv("tables/cell_means.csv")
 ```
 
 
 ```{r, echo = F, include=F}
-tidy(m1) %>% write.csv("tables/table2.csv")
-tidy(m2) %>% write.csv("tables/table3.csv")
+tidy(m1) %>% write.csv("tables/3way_left.csv")
+tidy(m2) %>% write.csv("tables/3way_right.csv")
 ```
 
-Neither model found any significant effects. Neither left-hand 2D:4D (`r report_t(m1, "L2d4d_std", "r", 275/2, 275/2)`) nor right-hand 2D:4D (`r report_t(m2, "R2d4d_std", "r", 275/2, 275/2)`) had any significant main effect on aggressive behavior. No higher-order interactions involving 2D:4D ratio of either hand were statistically significant. Full model output is summarized in Tables 2 and 3.
+Neither model found any significant effects. Neither left-hand 2D:4D (`r report_t(m1, "L2d4d_std", "r", 275/2, 275/2)`) nor right-hand 2D:4D (`r report_t(m2, "R2d4d_std", "r", 275/2, 275/2)`) had a significant main effect on aggressive behavior. Additionally, effects of game violence (`r report_t(m1, "Violence1", "d", 136, 139)`), game difficulty (`r report_t(m1, "Difficulty1", "d", 138, 137)`), and their interaction (`r report_t(m1, "Difficulty1:Violence1", "d", 69+70, 67+69)`) were small and not statistically significant. No higher-order interactions involving 2D:4D ratio of either hand were statistically significant. Full model output is summarized in Tables 2 and 3.
 
-Ignoring 2D:4D, a 2 Difficulty × 2 Violence ANOVA did not find significant effects of experimental assignment. Effects of game violence (`r report_t(m1, "Violence1", "d", 136, 139)`), game difficulty (`r report_t(m1, "Difficulty1", "d", 138, 137)`), and their interaction (`r report_t(m1, "Difficulty1:Violence1", "d", 69+70, 67+69)`) were small and not statistically significant.
-
-The earlier manipulation and sensitivity check indicated that much of the variance in aggression could be predicted by irritation with the partner. Because this irritation was generally independent of the experimental condition, this irritation has potential value as a covariate in analysis. However, adding this as a covariate did not increase the observed effect size. The effect of violence was `r report_t(m3.5, "Violence1", "d", 136, 139)`, the effect of difficulty was `r report_t(m3.5, "Difficulty1", "d", 138, 137)`, and their interaction was `r report_t(m3.5, "Difficulty1:Violence1",  "d", 69+70, 67+69)`.
+The earlier manipulation and sensitivity check indicated that much of the variance in aggression could be predicted by experienced provocation. Because this provocation was generally independent of the experimental condition, its inclusion as a covariate in analysis might increase statistical power. However, adding provocation as a covariate did not reveal significant effects. The effect of violence was `r report_t(m3.5, "Violence1", "d", 136, 139)`, the effect of difficulty was `r report_t(m3.5, "Difficulty1", "d", 138, 137)`, and their interaction was `r report_t(m3.5, "Difficulty1:Violence1",  "d", 69+70, 67+69)`. Effects of left-hand and right-hand 2D:4D remained nonsignificant (`r report_t(m4.5, "L2d4d_std", "r", 248/2, 248/2)` and `r report_t(m5.5, "R2d4d_std", "r", 250/2, 250/2)`, respectively).
 
 ###Bayesian ANOVA. 
 Models were compared using the BayesFactor package for R (Morey & Rouder, 2014). The scale of the effect size under the alternative hypothesis was specified as *d* ~ Cauchy(.4). Models were generated to represent all possible combinations of main effects and/or interactions. Models including interactions were constrained to also include lower-order interactions and main effects. All models were compared to a null-hypothesis model including no effects. 
 
 Of all the models, the null-hypothesis model was best supported by the data. Models of main effects of Violence, Difficulty, left-hand 2D:4D, or right-hand 2D:4D were each outperformed by the null model (Bayes factors = `r bfList[1] %>% round(2)`, `r bfList[2] %>% round(2)`, `r (1/exp(bf3.4@bayesFactor$bf)) %>% round(2)`, and `r (1/exp(bf4.4@bayesFactor$bf)) %>% round(2)` in favor of the null, respectively). 
-Higher-order interactions were not supported by the data, either. Evidence was ambiguous regarding a Violence × Difficulty interaction (BF = `r bfList[4]/bfList[3] %>% round(2)` favoring the null). Neither violence nor difficuly interacted with 2D:4D of the left hand (BF = `r bf_grab(bf01_vio_l2d4d)`, `r bf_grab(bf01_diff_l2d4d)`, respectively) or 2D:4D of the right hand (BF = `r bf_grab(bf01_vio_r2d4d)`, `r bf_grab(bf01_diff_r2d4d)`).  The 3-way interaction was not supported (left-hand BF = `r bf_grab(bf01_3way_l2d4d)`, right-hand BF = `r bf_grab(bf01_3way_r2d4d)`).
+Higher-order interactions were not supported by the data, either. Evidence was ambiguous regarding a Violence × Difficulty interaction (BF = `r (bfList[4]/bfList[3]) %>% round(2)` favoring the null). Neither violence nor difficulty interacted with 2D:4D of the left hand (BF = `r bf_grab(bf01_vio_l2d4d)`, `r bf_grab(bf01_diff_l2d4d)`, respectively) or 2D:4D of the right hand (BF = `r bf_grab(bf01_vio_r2d4d)`, `r bf_grab(bf01_diff_r2d4d)`).  The 3-way interaction was not supported (left-hand BF = `r bf_grab(bf01_3way_l2d4d)`, right-hand BF = `r bf_grab(bf01_3way_r2d4d)`).
 
-Composite irritation was added to the model as a predictor. Composite irritation was strongly supported by the evidence (B = `r bf_grab(bf7.4) %>% round(2)`). However, addition of this covariate did not improve the strength of evidence for main effects of violence (BF = `r bf_grab(bf01_vio_cov)`), difficulty (BF = `r bf_grab(bf01_diff_cov)`), or 2d4d (BF = `r bf_grab(bf01_l2d4d_cov)`, left hand; BF = `r bf_grab(bf01_r2d4d_cov)`, right hand).
-
-This indicates that variance in coldpressor duration could be predicted by composite irritation but not by game condition.
+Experienced provocation was added to the model as a predictor. An effect of provocation was strongly supported by the evidence (B = `r bf_grab(bf7.4) %>% round(2)`). However, addition of this covariate did not improve the strength of evidence for main effects of violence (BF = `r bf_grab(bf01_vio_cov)`), difficulty (BF = `r bf_grab(bf01_diff_cov)`), or 2D:4D (BF = `r bf_grab(bf01_l2d4d_cov)`, left hand; BF = `r bf_grab(bf01_r2d4d_cov)`, right hand). Taken together, these results indicate that aggression could be predicted by experienced provocation but not by game condition.
 
 ###Non-local Bayesian prior. 
 In the Bayesian hypothesis tests provided above, we use a non-directional, non-specific alternative hypothesis scaled roughly to the magnitude of the expected effect. While this is a useful hypothesis to test, it would also be useful to compare the obtained results against a more specific alternative hypothesis representing the effect as estimated from previous meta-analysis, δ = .43 (.35, .52) (Anderson et al., 2010).
 
-The main effect of Violence was d = 0.11 [-0.13, 0.35]. An online Bayes factor calculator (Dienes, 2008) was used to compare the evidence for H0: δ = 0 relative to H1: δ = .43 [.35, .52]. The obtained Bayes factor substantially preferred the null, B01 = 14.2.
+The main effect of Violence was *d* = 0.11 [-0.13, 0.35]. An online Bayes factor calculator (CITATION NEEDED) was used to compare the evidence for H0: *δ* = 0 relative to H1: *δ* = .43 [.35, .52]. The obtained Bayes factor substantially preferred the null, B01 = 14.2.
+
+Proponents have suggested that the Anderson et al. (2010) estimate may be an overestimate due to publication bias, but that after adjustment for publication bias the effect is still approximately *d* = .30. The Bayes factor calculator was used to compare the evidence for H0: *δ* = 0 relative to H2: *δ* = .30 [.20, .40]. The obtained Bayes factor still preferred the null, but less so relative to this more modest estimate, B02 = 2.0.
 
 ```{r, include=FALSE}
 source("bf_calculator.R")
@@ -102,10 +102,34 @@ sd_and <- (.52-.43)/1.96
 bf_nonlocal <- Bf(sd = sd_obs,
                   obtained = 0.11,
                   meanoftheory = 0.43,
-                  sdtheory = sd_and)$BayesFactor
+                  sdtheory = .05)$BayesFactor
 1/bf_nonlocal
+# rough
+bf_kepes1 <- Bf(sd = sd_obs,
+                  obtained = 0.11,
+                  meanoftheory = 0.4,
+                  sdtheory = .05)$BayesFactor
+1/bf_kepes1
+bf_kepes2 <- Bf(sd = sd_obs,
+                  obtained = 0.11,
+                  meanoftheory = 0.3,
+                  sdtheory = .05)$BayesFactor
+1/bf_kepes2
+bf_hilgardPET <- Bf(sd = sd_obs,
+                  obtained = 0.11,
+                  meanoftheory = .14,
+                  sdtheory = .112)$BayesFactor #(.18*2-.07*2)/1.96
+bf_hilgardPET
+bf_hilgardp <- Bf(sd = sd_obs,
+                  obtained = 0.11,
+                  meanoftheory = 0.04,
+                  sdtheory = .388)$BayesFactor #(.15*2+.23*2)/1.96
+bf_hilgardp
 ```
 
 
 ### Supplementary methods
 Coldpressor assignments were found to be non-normally distributed. To address this non-normality, the data were tested in two additional models to attempt to deal with the spike at 9. Censored regression was used to attempt to model responses greater than 9, and logistic regression was used to model the probability of a 9 response vs. all other responses. These methods did not yield substantively different conclusions (i.e., no parameters were significant). See the supplement for details.
+
+### Exploratory analyses
+A number of exploratory analyses were conducted. These examined whether aggression was predicted by participants' experience of difficulty during the game, participants' self-reported history of video games, and participants' in-game behaviors. Neither experienced difficulty nor history of game use predicted aggression. Participants who defeated more monsters and fired more bullets were slightly less aggressive (monsters defeated, `r report_t(ex1, "Game.2", "r", 274/2, 274/2)`; bullets fired, `r report_t(ex2, "I(Game.4 + Game.5)", "r", 274/2, 274/2)`), but this finding should be regarded with caution given this test's exploratory nature and modest *p*-value.

@@ -63,6 +63,16 @@ fail.badsesh <- dat %>%
   filter(goodSession == "No") %>% 
   select(Subject)
 
+# Count up failures of method
+# Savvy to hypothesis
+length(fail.savvy$Subject)
+#   plus took damage / died in easy game / took no damage in hard game
+length(setdiff(c(fail.easydie$Subject, fail.easyharm$Subject, fail.hard),
+               fail.savvy$Subject))
+# plus misc failures
+length(setdiff(fail.badsesh$Subject,
+               c(fail.easydie$Subject, fail.easyharm$Subject, fail.hard, fail.savvy$Subject)))
+
 # RA cited exp failure
 length(fail.badsesh$Subject)
 #   plus took damage / died in easy game / took no damage in hard game
@@ -164,13 +174,6 @@ dat.pure = dat %>%
     filter(!(Subject %in% c(fail.badsesh$Subject, fail.conflict$Subject, fail.easydie$Subject, 
                           fail.easyharm$Subject, fail.hard$Subject, fail.nodata$Subject, 
                           fail.savvy$Subject)))
-
-# Discard bad 2d4d data ----
-dat.pure$R2d4d[dat.pure$R2d4d < .8] = NA
-dat.pure$L2d4d[dat.pure$L2d4d < .8] = NA
-
-# TODO: inspect and consider harsher treatment for missing quality-control data
-# TODO: Create 2d4d ratios and look for outliers
 
 # TODO: Notes from old cleaning code ----
 # may wish to use debriefing questionnaire columns:

@@ -38,8 +38,8 @@ efa <- select(set.efa, -Subject) %>%
   fa(nfactors = 2) #factor 1 is negative affect, factor 2 is positive affect
 # append factor scores to set.efa and rename to PA and NA
 set.efa <- cbind(set.efa, efa$scores) %>% 
-  rename("feedback.NA" = MR1, "feedback.PA" = MR2)
- 
+  dplyr::select(feedback.NA = MR1, feedback.PA = MR2, everything())
+
 # Append those scores to full dataset
 dat = left_join(dat, set.efa)
 
@@ -60,9 +60,29 @@ efa2 <- select(set.efa2, -Subject) %>%
 # stressful & exhausting, navigation&controls, difficulty/fighting, 
 # reflexes/mental effort, and crud
 set.efa2 <- cbind(set.efa2, efa2$scores) %>% 
-  rename("stress" = MR3, "navigation" = MR2, "fighting" = MR4, 
-         "effort" = MR4, "crud" = MR1)
+  select("stress" = MR3, "navigation" = MR2, "fighting" = MR4, 
+         "effort" = MR5, "crud" = MR1, everything())
 dat <- left_join(dat, set.efa2)
+
+# Effects of difficulty on these?
+diff1 <- lm(stress ~ Difficulty * Violence, data = dat)
+diff2 <- lm(navigation ~ Difficulty * Violence, data = dat)
+diff3 <- lm(fighting ~ Difficulty * Violence, data = dat)
+diff4 <- lm(effort ~  Difficulty * Violence, data = dat)
+diff5 <- lm(crud ~ Difficulty * Violence, data = dat)
+summary(diff1)
+summary(diff2)
+summary(diff3)
+summary(diff4)
+summary(diff5)
+
+# cor table
+dat %>% 
+  mutate(vioNum = ifelse(Violence == "Violent", 1, 0),
+               diffNum = ifelse(Difficulty == "Hard", 1, 0)) %>% 
+  select(vioNum, diffNum, easy.nav:exhausting) %>% 
+  cor(use = 'pair') %>% 
+  round(2)
 
 # Make grand means and sds ----
 means = sapply(dat, mean, na.rm = T)
@@ -106,8 +126,7 @@ summary(check2.1)
 #     N     = summary(check2)$df[2]+3)
 
 # Irritation not fostered by game violence
-lm(feedback.NA ~  Violence * Difficulty, data = dat) %>%
-  summary
+m.provoke <- lm(feedback.NA ~  Violence * Difficulty, data = dat)
 
 # Gameplay variables
 dat %>%
@@ -168,9 +187,13 @@ summary(m3.5) # soaks up a lot of variance but effect of violence still not sign
 # 2d4d alone:
 m4 = lm(DV ~ L2d4d, data = dat)
 summary(m4)
+m4.5 <- lm(DV ~ L2d4d_std + feedback.NA, data = dat)
+summary(m4.5)
 # compute.es::tes(-.729, 272)
 m5 = lm(DV ~ R2d4d, data = dat)
 summary(m5)
+m5.5 <- lm(DV ~ R2d4d_std + feedback.NA, data = dat)
+summary(m5.5)
 # compute.es::tes(-.35, 273)
 
 # Gameplay variables ----
@@ -308,9 +331,54 @@ model3.5 = glm(DVbin ~ Difficulty*Violence + feedback.NA,
                family=binomial(link = "logit"), data=dat)
 summary(model3.5)
 
-save.image()
-
 # Kruskal-wallace tests aren't significant ----
 kruskal.test(DV ~ Violence, data = dat)
 kruskal.test(DV ~ Difficulty, data = dat)
 kruskal.test(DV ~ interaction(Violence, Difficulty), data = dat)
+
+# Exploratory analyses ----
+
+# Does affective experience of game predict aggression? No.
+summary(lm(DV ~ stress, data = dat))
+summary(lm(DV ~ navigation, data = dat))
+summary(lm(DV ~ fighting, data = dat))
+summary(lm(DV ~ effort, data = dat))
+summary(lm(DV ~ crud, data = dat))
+
+# Does gameplay history predict aggression? No
+set.vgefa <- select(dat, often.played:vg.cumul)
+fa.parallel(set.vgefa)
+fa(set.vgefa, 3)
+
+set.vgefa <- select(dat, FPS.experience:vg.cumul)
+fa.parallel(set.vgefa)
+fa(set.vgefa, 2)
+
+summary(lm(DV ~ often.played, data = dat))
+summary(lm(DV ~ FPS.experience, data = dat))
+summary(lm(DV ~ FPS.skill, data = dat))
+summary(lm(DV ~ mkb.experience, data = dat))
+summary(lm(DV ~ vg.freq, data = dat))
+summary(lm(DV ~ vg.cumul, data = dat))
+
+# Doesn't work well with EFA
+set.vgvar <- select(dat, Game.1:Game.6) %>% 
+  mutate(bullets = Game.4 + Game.5) %>% # sum guns to avoid Heywood case
+  select(-Game.4, -Game.5)
+fa.parallel(set.vgvar)
+vgfa <- fa(set.vgvar, 2)
+
+summary(lm(DV ~ Game.1, data = dat))
+ex1 <- (lm(DV ~ Game.2, data = dat)) # p = .0125
+summary(lm(DV ~ Game.2 * Violence, data = dat)) 
+summary(lm(DV ~ Game.3, data = dat)) # p = .081
+summary(lm(DV ~ Game.4, data = dat)) # p = .028
+summary(lm(DV ~ Game.5, data = dat)) 
+summary(lm(DV ~ Game.6, data = dat))
+ex2 <- (lm(DV ~ I(Game.4+Game.5), data = dat))
+
+ggplot(dat, aes(x = Game.2, y = DV, col = Violence)) + geom_point() + geom_smooth()
+
+
+# Save output for calling in .RMD file ----
+save.image()

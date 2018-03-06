@@ -144,13 +144,12 @@ theme(panel.background=element_blank(),
 ggplot(data=dat, aes(x=R2d4d, y=DV)) +
   geom_point(cex=1, alpha=.75) +
   geom_smooth(method="lm")+
-  labs(title="Null effects of 2d4d ratio (right hand)") +
+  #labs(title="Null effects of 2d4d ratio (right hand)") +
   xlab("Right-hand 2d4d ratio") +
   ylab("Coldpressor duration") +
   # break it out into each game condition
   facet_wrap(~Violence*Difficulty) +
-  scale_y_discrete(limits=1:9, breaks=c(1,3,5,7,9)) +
-  bigtext
+  scale_y_discrete(limits=1:9, breaks=c(1,3,5,7,9)) 
 # make the text huge
 #  postertext  #+
 #   # remove the background
@@ -159,26 +158,32 @@ ggplot(data=dat, aes(x=R2d4d, y=DV)) +
 #         axis.title.y=element_text(vjust=.2),
 #         axis.title.x=element_text(vjust=.5)
 #         )
-ggsave("r2d4d_x_2x2.png", width=4, height=3, units="in")
+ggsave("r2d4d_x_2x2.png", width=4, height=4, units="in")
 
 # faceted scatterplot w/ left-hand 2d4d:
 ggplot(data=dat, aes(x=L2d4d, y=DV)) +
   geom_point(cex=1, alpha=.75) +
   geom_smooth(method="lm")+
-  labs(title="Null effects of 2d4d ratio (left hand)") +
+  #labs(title="Null effects of 2d4d ratio (left hand)") +
   xlab("Left-hand 2d4d ratio") +
   ylab("Coldpressor duration") +
   # break it out into each game condition
   facet_wrap(~Violence*Difficulty) +
-  scale_y_discrete(limits=1:9, breaks=c(1,3,5,7,9)) +
-  bigtext  #+
+  scale_y_discrete(limits=1:9, breaks=c(1,3,5,7,9))   #+
 #   # remove the background
 #   theme(panel.background=element_blank(),
 #         # this part attempts to adjust the axis distance but i'm having trouble
 #         axis.title.y=element_text(vjust=.2),
 #         axis.title.x=element_text(vjust=.5)
 #         )
-ggsave("l2d4d_x_2x2.png", width=4, height=3, units="in")
+ggsave("l2d4d_x_2x2.png", width=4, height=4, units="in")
+
+ggplot(data = dat, aes(x = feedback.NA, y = DV)) +
+  geom_point() +
+  geom_smooth() +
+  xlab("Experienced provocation") +
+  ylab("Coldpressor duration")
+ggsave("Provocation.png", width = 4, height = 3, units = 'in')
 
 # # jitter points
 # ggplot(data=dat, aes(x=interaction(dat$Violence, dat$Difficulty), y=DV)) +
