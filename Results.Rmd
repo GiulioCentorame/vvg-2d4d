@@ -61,7 +61,7 @@ lm(feedback.NA ~  Violence * Difficulty, data = dat) %>%
 ```
 
 ###Conventional General Linear Models.
-General linear models were used to look for main effects and interactions of game difficulty, game violence, and 2D:4D ratio. Two models were used to look for effects of left and right 2D:4D ratio separately. Factors were contrast-coded and 2D:4D ratios were standardized to preserve orthogonality of parameter estimates. Cell means and SDs are provided in Table 1
+General linear models were used to look for main effects and interactions of game difficulty, game violence, and 2D:4D ratio. These tests were preregistered. Two models were used to look for effects of left and right 2D:4D ratio separately. Factors were contrast-coded and 2D:4D ratios were standardized to preserve orthogonality of parameter estimates. Cell means and SDs are provided in Table 1. 
 
 ```{r, echo=F, include=F}
 dat %>% 
