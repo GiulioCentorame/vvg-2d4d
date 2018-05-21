@@ -20,8 +20,8 @@ dat$Difficulty = factor(dat$Difficulty) %>% relevel("Hard") %>% C(sum)
 dat[dat == -999] <- NA
 dat[dat == "CONFLICT!"] <- NA
 # Make standardized 2d4ds
-dat$L2d4d_std = dat$L2d4d - mean(dat$L2d4d, na.rm = T) / sd(dat$L2d4d, na.rm = T)
-dat$R2d4d_std = dat$R2d4d - mean(dat$R2d4d, na.rm = T) / sd(dat$R2d4d, na.rm = T)
+dat$L2d4d_std = (dat$L2d4d - mean(dat$L2d4d, na.rm = T)) / sd(dat$L2d4d, na.rm = T)
+dat$R2d4d_std = (dat$R2d4d - mean(dat$R2d4d, na.rm = T)) / sd(dat$R2d4d, na.rm = T)
 
 # Create composites: irritation, challenge ----
 
@@ -344,6 +344,10 @@ summary(lm(DV ~ navigation, data = dat))
 summary(lm(DV ~ fighting, data = dat))
 summary(lm(DV ~ effort, data = dat))
 summary(lm(DV ~ crud, data = dat))
+# TODO: is there some way to aggregate this data
+select(dat, stress, navigation, fighting, effort, crud, DV) %>% 
+  cor(use = 'pairwise') %>% 
+  round(3)
 
 # Does gameplay history predict aggression? No
 set.vgefa <- select(dat, often.played:vg.cumul)
@@ -360,6 +364,13 @@ summary(lm(DV ~ FPS.skill, data = dat))
 summary(lm(DV ~ mkb.experience, data = dat))
 summary(lm(DV ~ vg.freq, data = dat))
 summary(lm(DV ~ vg.cumul, data = dat))
+ex.cumul <- lm(DV ~ vg.cumul, data = dat)
+# TODO: Do some sort of aggregation of these variables in a way that's consistent
+#   with the literature. Is it vg.cumul? where did that come from?
+select(dat, often.played:vg.cumul, DV) %>% 
+  cor(use = 'pairwise') %>% 
+  round(3)
+
 
 # Doesn't work well with EFA
 set.vgvar <- select(dat, Game.1:Game.6) %>% 

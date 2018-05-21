@@ -42,8 +42,6 @@ fetchStats = function(x, df) {
 
 ```
 
-
-
 ## Manipulation Check
 *Game manipulation.* Participant ratings on the post-questionnaires were submitted to 2 (Violence) × 2 (Difficulty) ANOVA. The manipulation was highly effective: participants indicated that the violent game (*M* = `r vioMeans["Violent"] %>% signif(2)` (`r vioSDs["Violent"] %>% signif(2)`)) was much more violent than the nonviolent game (*M* = `r vioMeans["Less Violent"] %>% signif(2)` (`r vioSDs["Less Violent"] %>% signif(2)`); `r reportCI(smd = (vioMeans["Violent"] - vioMeans["Less Violent"]) / pool.sd(vioSDs, vioN), n.1 = vioN[2], n.2 = vioN[1])`). 
 
@@ -61,7 +59,7 @@ lm(feedback.NA ~  Violence * Difficulty, data = dat) %>%
 ```
 
 ###Conventional General Linear Models.
-General linear models were used to look for main effects and interactions of game difficulty, game violence, and 2D:4D ratio. Two models were used to look for effects of left and right 2D:4D ratio separately. Factors were contrast-coded and 2D:4D ratios were standardized to preserve orthogonality of parameter estimates. Cell means and SDs are provided in Table 1
+General linear models were used to look for main effects and interactions of game difficulty, game violence, and 2D:4D ratio. Two models were used to look for effects of left and right 2D:4D ratio separately. Factors were contrast-coded and 2D:4D ratios were standardized to preserve orthogonality of parameter estimates. Cell means and SDs are provided in Table 1.
 
 ```{r, echo=F, include=F}
 dat %>% 
@@ -132,4 +130,4 @@ bf_hilgardp
 Cold pressor assignments were found to be non-normally distributed. To address this non-normality, the data were tested in two additional models to attempt to deal with the spike at 9. Censored regression was used to attempt to model responses greater than 9, and logistic regression was used to model the probability of a 9 response vs. all other responses. These methods did not yield substantively different conclusions (i.e., no parameters were significant). See the supplement for details.
 
 ### Exploratory analyses
-A number of exploratory analyses were conducted. These examined whether aggression was predicted by participants' experience of difficulty during the game, participants' self-reported history of video games, and participants' in-game behaviors. Neither experienced difficulty nor history of game use predicted aggression. Participants who defeated more monsters and fired more bullets were slightly less aggressive (monsters defeated, `r report_t(ex1, "Game.2", "r", 274/2, 274/2)`; bullets fired, `r report_t(ex2, "I(Game.4 + Game.5)", "r", 274/2, 274/2)`), but this finding should be regarded with caution given this test's exploratory nature and modest *p*-value.
+A number of exploratory analyses were conducted. These examined whether aggression was predicted by participants' experience of difficulty during the game, participants' self-reported history of video games, and participants' in-game behaviors. Neither experienced difficulty nor history of game use  (`r report_t(ex.cumul, "vg.cumul", "r", 274/2, 274/2`) [CHECK ME PLEASE] predicted aggression. Participants who defeated more monsters and fired more bullets were slightly less aggressive (monsters defeated, `r report_t(ex1, "Game.2", "r", 274/2, 274/2)`; bullets fired, `r report_t(ex2, "I(Game.4 + Game.5)", "r", 274/2, 274/2)`), but this finding should be regarded with caution given this test's exploratory nature and modest *p*-value.

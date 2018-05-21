@@ -1,6 +1,6 @@
 # master script
 # install.packages(c('rms', 'MBESS', 'censReg', 'tidyverse', 'broom',
-# 'car', 'BayesFactor', 'psych', 'devtools', 'knitr'))
+# 'car', 'BayesFactor', 'psych', 'devtools', 'knitr', 'compute.es'))
 #library(devtools)
 #install_github("Joe-Hilgard/hilgard")
 library(knitr)
