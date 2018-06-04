@@ -73,7 +73,7 @@ dat %>%
 #ggsave("violence-condition_hist.png", width = 5.5, height = 4, units="in")
 
 # Difficulty affect composite challenge? (Is this reverse-scored?)
-ggplot(dat, aes(x=composite_challenge)) +
+ggplot(dat, aes(x=stress)) +
   geom_histogram() +
   facet_wrap(~Difficulty) +
   scale_x_continuous("Ratings of Difficulty") +
@@ -82,8 +82,8 @@ ggplot(dat, aes(x=composite_challenge)) +
   bigtext
 #ggsave("Difficulty-PCA_hist.png", width = 5.5, height = 4, units="in")
 
-# Composite irritation influence aggression?
-ggplot(dat, aes(x=composite_irritation, y = DV)) +
+# feedback negative affect influence aggression?
+ggplot(dat, aes(x=feedback.NA, y = DV)) +
   geom_point(cex=2, alpha=.8, position=position_jitter(height=.1)) +
   geom_smooth() +
   scale_x_continuous("Composite irritation (1st principal component)")+
@@ -134,11 +134,11 @@ ggplot(data=dat, aes(x=R2d4d, y=DV, col=Violence)) +
   # make the text huge
   bigtext #+
 # remove the background
-theme(panel.background=element_blank(),
-      # this part attempts to adjust the axis distance but i'm having trouble
-      axis.title.y=element_text(vjust=.2),
-      axis.title.x=element_text(vjust=.5)
-)
+# theme(panel.background=element_blank(),
+#       # this part attempts to adjust the axis distance but i'm having trouble
+#       axis.title.y=element_text(vjust=.2),
+#       axis.title.x=element_text(vjust=.5)
+# )
 
 # faceted scatterplot w/ right-hand 2d4d:
 ggplot(data=dat, aes(x=R2d4d, y=DV)) +
