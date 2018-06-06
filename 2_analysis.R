@@ -47,42 +47,40 @@ dat = left_join(dat, set.efa)
 # Get complete cases for EFA
 set.efa2 = dat %>% 
   select(Subject, 
-         easy.nav, challenging, stressful, diff.nav, reflexes, difficult, 
-         good.fight, hard.control, mental.effort, comfort.control, exhausting) %>% 
+         easy.nav:enjoyed) %>% 
   filter(complete.cases(.)) 
 # Perform parallel analysis
 set.efa2 %>% 
   select(easy.nav:exhausting) %>% 
-  fa.parallel(fm = 'pa') # because complained about minres default # 5 factors??
-# TODO: Consider these loadings. Component 1 doesn't seem to catch it all. Factor rotation more appropriate?
+  fa.parallel(fm = 'pa') # fm = pa because complained about minres default 
+# 4 factors??
 efa2 <- select(set.efa2, -Subject) %>% 
-  fa(nfactor = 5) 
-# stressful & exhausting, navigation&controls, difficulty/fighting, 
-# reflexes/mental effort, and crud
+  fa(nfactor = 4) 
+# factor 1: exciting, engaging, satisfying & effective guns, enjoyed game
+# factor 2: challenging, stressful, requires reflexes, good fight, mental effort
+# factor 3: hard to control, hard to navigate, uncomfortable with controls
+# factor 4: violence and aggression
 set.efa2 <- cbind(set.efa2, efa2$scores) %>% 
-  select("stress" = MR3, "navigation" = MR2, "fighting" = MR4, 
-         "effort" = MR5, "crud" = MR1, everything())
+  select("excitement" = MR2, "challenge" = MR1, "discomfort" = MR4, 
+         "gore" = MR3, everything())
 dat <- left_join(dat, set.efa2)
 
 # Effects of difficulty on these?
-diff1 <- lm(stress ~ Difficulty * Violence, data = dat)
-diff2 <- lm(navigation ~ Difficulty * Violence, data = dat)
-diff3 <- lm(fighting ~ Difficulty * Violence, data = dat)
-diff4 <- lm(effort ~  Difficulty * Violence, data = dat)
-diff5 <- lm(crud ~ Difficulty * Violence, data = dat)
-summary(diff1)
-summary(diff2)
-summary(diff3)
-summary(diff4)
-summary(diff5)
+diff1 <- lm(excitement ~ Difficulty * Violence, data = dat)
+diff2 <- lm(challenge ~ Difficulty * Violence, data = dat)
+diff3 <- lm(discomfort ~ Difficulty * Violence, data = dat)
+diff4 <- lm(gore ~  Difficulty * Violence, data = dat)
+summary(diff1) # main effects + interaction
+summary(diff2) # big effect of game difficulty
+summary(diff3) # big effect of game difficulty
+summary(diff4) # solid manipulation check
 
-# cor table
-dat %>% 
-  mutate(vioNum = ifelse(Violence == "Violent", 1, 0),
-               diffNum = ifelse(Difficulty == "Hard", 1, 0)) %>% 
-  select(vioNum, diffNum, easy.nav:exhausting) %>% 
-  cor(use = 'pair') %>% 
-  round(2)
+# Make factors out of gameplay variables
+# or don't -- factor analysis ends in Heywood cases
+select(dat, Game.1:Game.6) %>% 
+  fa.parallel()
+select(dat, Game.1:Game.6) %>% 
+  fa(nfactors = 3)
 
 # Make grand means and sds ----
 means = sapply(dat, mean, na.rm = T)
@@ -200,15 +198,14 @@ summary(m5.5)
 dat %>% 
   select(Game.1:Game.6, DV) %>% 
   cor(use = 'pairwise')
-select(dat, Game.1:Game.6) %>% 
-  fa.parallel()
-select(dat, Game.1:Game.6) %>% 
-  fa(nfactors = 3)
+# does BF like using any of these to predict aggression?
 dat %>% 
   select(Game.1:Game.6, DV) %>% 
   filter(complete.cases(.)) %>% 
   regressionBF(DV ~ Game.1 + Game.2 + Game.3 + Game.4 + Game.5 + Game.6, data = .) %>% 
   sort()
+# individual BFs are weak (<3). maybe Game.2, Game.4, and Game.5
+# Each is negatively related to aggression
 
 # Bayesian models of primary outcome ----
 # ANOVA
@@ -286,48 +283,54 @@ bf01_r2d4d_cov <- bf7.7/bf7.6
 
 # Censored-from-above analysis ----
 library(censReg)
-censModel1 = censReg(DV ~ Difficulty*Violence*L2d4d, left=1, right=9, data=dat)
+# Make my contrast coding manually for orthogonality
+dat <- mutate(dat,
+              diffContr = case_when(Difficulty == "Easy" ~ -1,
+                                     Difficulty == "Hard" ~ 1),
+              vioContr = case_when(Violence == "Less Violent" ~ -1,
+                                    Violence == "Violent" ~ 1))
+censModel1 = censReg(DV ~ diffContr*vioContr*L2d4d_std, left=1, right=9, data=dat)
 summary(censModel1)
 # adding covariate
-censModel1.1 = censReg(DV ~ Difficulty*Violence*L2d4d + feedback.NA,
+censModel1.1 = censReg(DV ~ diffContr*vioContr*L2d4d + feedback.NA,
                        left=1, right=9, data=dat)
 summary(censModel1.1)
 # 3-way w/ right hand
-censModel2 = censReg(DV ~ Difficulty*Violence*R2d4d, left=1, right=9, data=dat)
+censModel2 = censReg(DV ~ diffContr*vioContr*R2d4d, left=1, right=9, data=dat)
 summary(censModel2)
 # adding covariate
-censModel2.1 = censReg(DV ~ Difficulty*Violence*R2d4d + feedback.NA,
+censModel2.1 = censReg(DV ~ diffContr*vioContr*R2d4d + feedback.NA,
                        left=1, right=9, data=dat)
 summary(censModel2.1) # some p = .04 interactions
 # 2x2 ANOVA, dropping 2d4d & 3-ways
-censModel3 = censReg(DV ~ Difficulty*Violence, left=1, right=9, data=dat)
+censModel3 = censReg(DV ~ diffContr*vioContr, left=1, right=9, data=dat)
 summary(censModel3)
 # adding covariate
-censModel3.1 = censReg(DV ~ Difficulty*Violence + feedback.NA,
+censModel3.1 = censReg(DV ~ diffContr*vioContr + feedback.NA,
                        left=1, right=9, data=dat)
 summary(censModel3.1)
 
 # Logistic regression w/ binned DV ----
 dat$DVbin = ifelse(dat$DV == 9, 1, 0)
 # With L2d4d
-model1 = glm(DVbin ~ Difficulty*Violence*L2d4d_std, family=binomial(link="logit"), data=dat)
+model1 = glm(DVbin ~ diffContr*vioContr*L2d4d_std, family=binomial(link="logit"), data=dat)
 summary(model1)
 # With L2d4d + covariate
-model1.1 = glm(DVbin ~ Difficulty*Violence*L2d4d_std + feedback.NA, 
+model1.1 = glm(DVbin ~ diffContr*vioContr*L2d4d_std + feedback.NA, 
                family=binomial(link="logit"), data=dat)
 summary(model1.1)
 # With R2d4d
-model2 = glm(DVbin ~ Difficulty*Violence*R2d4d_std, family=binomial(link="logit"), data=dat)
+model2 = glm(DVbin ~ diffContr*vioContr*R2d4d_std, family=binomial(link="logit"), data=dat)
 summary(model2)
 # With R2d4d + covariate
-model2.1 = glm(DVbin ~ Difficulty*Violence*R2d4d_std + feedback.NA,
+model2.1 = glm(DVbin ~ diffContr*vioContr*R2d4d_std + feedback.NA,
                family=binomial(link="logit"), data=dat)
 summary(model2.1)
 # 2x2 ANOVA
-model3 = glm(DVbin ~ Difficulty*Violence, family=binomial(link = "logit"), data=dat)
+model3 = glm(DVbin ~ diffContr*vioContr, family=binomial(link = "logit"), data=dat)
 summary(model3)
 # 2x2 ANCOVA (irritation covariate)
-model3.5 = glm(DVbin ~ Difficulty*Violence + feedback.NA,
+model3.5 = glm(DVbin ~ diffContr*vioContr + feedback.NA,
                family=binomial(link = "logit"), data=dat)
 summary(model3.5)
 
@@ -336,28 +339,27 @@ kruskal.test(DV ~ Violence, data = dat)
 kruskal.test(DV ~ Difficulty, data = dat)
 kruskal.test(DV ~ interaction(Violence, Difficulty), data = dat)
 
-# Exploratory analyses ----
-
+# Exploratory cross-sectional analyses ----
 # Does affective experience of game predict aggression? No.
-summary(lm(DV ~ stress, data = dat))
-summary(lm(DV ~ navigation, data = dat))
-summary(lm(DV ~ fighting, data = dat))
-summary(lm(DV ~ effort, data = dat))
-summary(lm(DV ~ crud, data = dat))
-# TODO: is there some way to aggregate this data
-select(dat, stress, navigation, fighting, effort, crud, DV) %>% 
-  cor(use = 'pairwise') %>% 
-  round(3)
+enjoy.efa <- lm(DV ~ excitement, data = dat) # p = .008
+# those who enjoyed game more likely to aggress
+challenge.efa <-lm(DV ~ challenge, data = dat)
+discomfort.efa <- lm(DV ~ discomfort, data = dat)
+summary(lm(DV ~ gore, data = dat))
 
 # Does gameplay history predict aggression? No
 set.vgefa <- select(dat, often.played:vg.cumul)
 fa.parallel(set.vgefa)
 fa(set.vgefa, 3)
-
+# try to address  heywood case by removing item with 0, 0, 1 loadings
 set.vgefa <- select(dat, FPS.experience:vg.cumul)
 fa.parallel(set.vgefa)
-fa(set.vgefa, 2)
+vgHistory <- fa(set.vgefa, 2)
+dat.efa <- cbind(dat, vgHistory$scores)
+vg1.efa <- (lm(DV ~ MR1, data = dat.efa))
+vg2.efa <- (lm(DV ~ MR2, data = dat.efa))
 
+# single-item relationships with DV
 summary(lm(DV ~ often.played, data = dat))
 summary(lm(DV ~ FPS.experience, data = dat))
 summary(lm(DV ~ FPS.skill, data = dat))
@@ -365,20 +367,8 @@ summary(lm(DV ~ mkb.experience, data = dat))
 summary(lm(DV ~ vg.freq, data = dat))
 summary(lm(DV ~ vg.cumul, data = dat))
 ex.cumul <- lm(DV ~ vg.cumul, data = dat)
-# TODO: Do some sort of aggregation of these variables in a way that's consistent
-#   with the literature. Is it vg.cumul? where did that come from?
-select(dat, often.played:vg.cumul, DV) %>% 
-  cor(use = 'pairwise') %>% 
-  round(3)
 
-
-# Doesn't work well with EFA
-set.vgvar <- select(dat, Game.1:Game.6) %>% 
-  mutate(bullets = Game.4 + Game.5) %>% # sum guns to avoid Heywood case
-  select(-Game.4, -Game.5)
-fa.parallel(set.vgvar)
-vgfa <- fa(set.vgvar, 2)
-
+# Exploratory analyses to see if game variables predict aggression
 summary(lm(DV ~ Game.1, data = dat))
 ex1 <- (lm(DV ~ Game.2, data = dat)) # p = .0125
 summary(lm(DV ~ Game.2 * Violence, data = dat)) 

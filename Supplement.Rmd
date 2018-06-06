@@ -11,18 +11,22 @@ output: word_document
 To attempt to ameliorate the potential ceiling effect, a censored regression model was fit with the ‘censReg’ package for R (Henningsen, 2013). This fits a censored-regression Tobit model and attempts to model values that exceed the maximum of the scale.
 
 ```{r}
-summary(censModel1)
-summary(censModel1.1)
-summary(censModel2)
-summary(censModel2.1)
+library(hilgard)
+library(broom)
+library(tidyverse)
+load(".Rdata")
+# summary(censModel1)
+# summary(censModel1.1)
+# summary(censModel2)
+# summary(censModel2.1)
 ```
 
-As before, the analysis found no significant effects of violence, difficulty, 2D4D, or any higher-order interaction.
+As before, the analysis found no significant effects of violence, difficulty, 2D4D, or any higher-order interaction. A significant effect of irritation with the partner's feedback was observed, but applying this as a covariate did not affect the primary results.
 
-<!-- Why does 2d4d blow out the scale of OR? -->
+<!-- Is something wrong with my report_z function -->
 ###Logistic regression. 
 Another possibility is that participants completed the coldpressor assignment in one of two ways: either they followed instructions and randomly assigned the other participant to a value between 1 and 9, or they decided to aggress and assign the other participant the maximum value. To model this possibility, I treated the response variable as a dichotomous outcome. Participants assigning values 1-8 were treated as one category (nonaggressive response) and participants assigning value 9 were treated as the other (aggressive response). Logistic regression was performed to test whether the odds of aggressing were influenced by the experimental assignment.
 
-We conducted a 2 Violence × 2 Difficulty ANOVA with a logistic link function. Violence did not appear to influence aggression, `r report_z(model3, "Violence1")`. Difficulty also had a minimal effect on aggression, `r report_z(model3, "Difficulty1")`.	Application of composite irritation as a covariate to these models revealed an effect of composite irritation, `r report_z(model3.5, "feedback.NA")`, but did not increase the estimated effects of violence, difficulty, or their interaction.
+We conducted a 2 Violence × 2 Difficulty ANOVA with a logistic link function. Violence did not appear to influence aggression, `r report_z(model3, "vioContr")`. Difficulty also had a minimal effect on aggression, `r report_z(model3, "diffContr")`.	Application of composite irritation as a covariate to these models revealed an effect of composite irritation, `r report_z(model3.5, "feedback.NA")`, but did not increase the estimated effects of violence, difficulty, or their interaction.
 
 Main effects of 2D:4D on aggression were again negligible. Left 2D:4D did not predict aggression, `r report_z(model1, "L2d4d_std")`, nor did right 2D:4D, `r report_z(model2, "R2d4d_std")`. Application of composite irritation as a covariate did not influence the estimated effect. Higher-order interactions of 2D:4D with factors of Violence or Difficulty were not supported by the results (all |t| < 1.53).
