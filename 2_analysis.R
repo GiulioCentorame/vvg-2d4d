@@ -292,14 +292,14 @@ dat <- mutate(dat,
 censModel1 = censReg(DV ~ diffContr*vioContr*L2d4d_std, left=1, right=9, data=dat)
 summary(censModel1)
 # adding covariate
-censModel1.1 = censReg(DV ~ diffContr*vioContr*L2d4d + feedback.NA,
+censModel1.1 = censReg(DV ~ diffContr*vioContr*L2d4d_std + feedback.NA,
                        left=1, right=9, data=dat)
 summary(censModel1.1)
 # 3-way w/ right hand
-censModel2 = censReg(DV ~ diffContr*vioContr*R2d4d, left=1, right=9, data=dat)
+censModel2 = censReg(DV ~ diffContr*vioContr*R2d4d_std, left=1, right=9, data=dat)
 summary(censModel2)
 # adding covariate
-censModel2.1 = censReg(DV ~ diffContr*vioContr*R2d4d + feedback.NA,
+censModel2.1 = censReg(DV ~ diffContr*vioContr*R2d4d_std + feedback.NA,
                        left=1, right=9, data=dat)
 summary(censModel2.1) # some p = .04 interactions
 # 2x2 ANOVA, dropping 2d4d & 3-ways

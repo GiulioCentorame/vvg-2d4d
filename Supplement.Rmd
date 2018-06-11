@@ -10,18 +10,79 @@ output: word_document
 ###Censored regression. 
 To attempt to ameliorate the potential ceiling effect, a censored regression model was fit with the ‘censReg’ package for R (Henningsen, 2013). This fits a censored-regression Tobit model and attempts to model values that exceed the maximum of the scale.
 
-```{r}
+```{r, echo = F, warning = F}
 library(hilgard)
 library(broom)
 library(tidyverse)
 load(".Rdata")
-# summary(censModel1)
-# summary(censModel1.1)
-# summary(censModel2)
-# summary(censModel2.1)
+
+# This will take a little work because tidy::broom() won't play with censReg
+tidyCensReg <- function(x) {
+  # get table of estimates
+  step1 <- summary(x)
+  bar <- step1$estimate
+  # tidy and give nice names
+  out <- broom::tidy(bar)
+  names(out) <- c("term", "estimate", "std.error", "statistic", "p.value")
+  # round variables for readability
+  out <- mutate_at(out, .vars = vars(estimate:p.value), .funs = funs(round(., 3)))
+  # return output
+  return(out)
+}
+
+report_t_censReg <- function(model, effect, metric = "b", n1, n2) {
+  frame <- tidyCensReg(x = model)
+  t <- with(frame, statistic[term == effect])
+  t <- round(t, 2)
+  df <- model$df.residual
+  p <- with(frame, p.value[term == effect])
+  p <- fix_p(p)
+  if (metric == "b") {
+    b <- with(frame, estimate[term == effect])
+    b <- numformat(b)
+    ci <- confint(model)
+    ci <- broom::tidy(ci)
+    ci <- dplyr::filter(ci, .rownames == effect)
+    ci <- dplyr::select(ci, -c(.rownames))
+    ci <- numformat(ci)
+    esci.out <- paste0("*b* = ", b, " [", ci[1], ", ", ci[2], 
+                       "]")
+  }
+  if (metric == "d") {
+    esci <- with(frame, statistic[term == effect]) %>% compute.es::tes(n1, 
+                                                                       n2, verbose = F)
+    esci.out <- paste0("*d* = ", esci$d, " [", esci$l.d, 
+                       ", ", esci$u.d, "]")
+  }
+  if (metric == "r") {
+    esci <- with(frame, statistic[term == effect]) %>% compute.es::tes(n1, 
+                                                                       n2, verbose = F)
+    if (with(frame, statistic[term == effect]) >= 0) {
+      esci.out <- paste0("*r* = ", numformat(esci$r), " [", 
+                         numformat(esci$l.r), ", ", numformat(esci$u.r), 
+                         "]")
+    }
+    if (with(frame, statistic[term == effect]) < 0) {
+      esci.out <- paste0("*r* = ", numformat(-esci$r), 
+                         " [", numformat(-esci$u.r), ", ", numformat(-esci$l.r), 
+                         "]")
+    }
+  }
+  t.out <- paste0("*t*(", df, ") = ", t, ", ", p)
+  output <- paste0(t.out, ", ", esci.out)
+  return(output)
+}
+  
+# Maybe easiest just to report as a series of supplementary tables
+# tidyCensReg(censModel1) # Left hand
+# tidyCensReg(censModel1.1) # Left hand with covar
+# tidyCensReg(censModel2) # right hand
+# tidyCensReg(censModel2.1) # right hand with covar
 ```
 
-As before, the analysis found no significant effects of violence, difficulty, 2D4D, or any higher-order interaction. A significant effect of irritation with the partner's feedback was observed, but applying this as a covariate did not affect the primary results.
+Application of this analysis to 2 Violence × 2 Difficulty ANOVA found no significant effects of violence (`r report_t_censReg(censModel3, "vioContr", "r", 275/2, 275/2)`), difficulty (`r report_t_censReg(censModel3, "diffContr", "r", 275/2, 275/2)`), or their interaction (`r report_t_censReg(censModel3, "diffContr:vioContr", "r", 275/2, 275/2)`). A significant effect of irritation with the partner's feedback was observed, but applying this as a covariate did not affect the primary results.
+
+Main effects of 2D:4D on aggression were again negligible. Left 2D:4D did not predict aggression, `r report_t_censReg(censModel1, "L2d4d_std")`, nor did right 2D:4D, `r report_t_censReg(censModel2, "R2d4d_std")`. Application of composite irritation as a covariate did not influence the estimated effect. Higher-order interactions of 2D:4D with factors of Violence or Difficulty were not supported by the results (all |*t*| < 1), with the exception of a Difficulty × Violence × Right 2D:4D interaction that was barely significant after adjusting for irritation (*p* = .044).
 
 <!-- Is something wrong with my report_z function -->
 ###Logistic regression. 
@@ -29,4 +90,4 @@ Another possibility is that participants completed the coldpressor assignment in
 
 We conducted a 2 Violence × 2 Difficulty ANOVA with a logistic link function. Violence did not appear to influence aggression, `r report_z(model3, "vioContr")`. Difficulty also had a minimal effect on aggression, `r report_z(model3, "diffContr")`.	Application of composite irritation as a covariate to these models revealed an effect of composite irritation, `r report_z(model3.5, "feedback.NA")`, but did not increase the estimated effects of violence, difficulty, or their interaction.
 
-Main effects of 2D:4D on aggression were again negligible. Left 2D:4D did not predict aggression, `r report_z(model1, "L2d4d_std")`, nor did right 2D:4D, `r report_z(model2, "R2d4d_std")`. Application of composite irritation as a covariate did not influence the estimated effect. Higher-order interactions of 2D:4D with factors of Violence or Difficulty were not supported by the results (all |t| < 1.53).
+Main effects of 2D:4D on aggression were again negligible. Left 2D:4D did not predict aggression, `r report_z(model1, "L2d4d_std")`, nor did right 2D:4D, `r report_z(model2, "R2d4d_std")`. Application of composite irritation as a covariate did not influence the estimated effect. Higher-order interactions of 2D:4D with factors of Violence or Difficulty were not supported by the results (all |*t*| < 1.53).
