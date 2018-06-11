@@ -10,7 +10,7 @@ output: word_document
 ###Censored regression. 
 To attempt to ameliorate the potential ceiling effect, a censored regression model was fit with the ‘censReg’ package for R (Henningsen, 2013). This fits a censored-regression Tobit model and attempts to model values that exceed the maximum of the scale.
 
-```{r, echo = F, warning = F}
+```{r, echo = F, warning = F, include = F}
 library(hilgard)
 library(broom)
 library(tidyverse)
@@ -18,6 +18,7 @@ load(".Rdata")
 
 # This will take a little work because tidy::broom() won't play with censReg
 tidyCensReg <- function(x) {
+  print(summary(x)) # including this somehow fixes the bug
   # get table of estimates
   step1 <- summary(x)
   bar <- step1$estimate
@@ -83,6 +84,7 @@ report_t_censReg <- function(model, effect, metric = "b", n1, n2) {
 Application of this analysis to 2 Violence × 2 Difficulty ANOVA found no significant effects of violence (`r report_t_censReg(censModel3, "vioContr", "r", 275/2, 275/2)`), difficulty (`r report_t_censReg(censModel3, "diffContr", "r", 275/2, 275/2)`), or their interaction (`r report_t_censReg(censModel3, "diffContr:vioContr", "r", 275/2, 275/2)`). A significant effect of irritation with the partner's feedback was observed, but applying this as a covariate did not affect the primary results.
 
 Main effects of 2D:4D on aggression were again negligible. Left 2D:4D did not predict aggression, `r report_t_censReg(censModel1, "L2d4d_std")`, nor did right 2D:4D, `r report_t_censReg(censModel2, "R2d4d_std")`. Application of composite irritation as a covariate did not influence the estimated effect. Higher-order interactions of 2D:4D with factors of Violence or Difficulty were not supported by the results (all |*t*| < 1), with the exception of a Difficulty × Violence × Right 2D:4D interaction that was barely significant after adjusting for irritation (*p* = .044).
+
 
 <!-- Is something wrong with my report_z function -->
 ###Logistic regression. 
