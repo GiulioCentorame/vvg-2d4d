@@ -1,6 +1,7 @@
 
 
-dat = read.delim("full_data.txt", stringsAsFactors = F)
+dat = read.delim("full_data.txt", stringsAsFactors = F) %>% 
+  slice(1:446) # discard the blank rows at the bottom
 stash.names <- names(dat)
 
 # remove debug rows
@@ -25,9 +26,6 @@ dat$L2d4d = dat$L_index_length/dat$L_ring_length
 dat$R2d4d = dat$R_index_length/dat$R_ring_length
 
 # Count bad subjects ----
-# TODO: check that all this is working right
-# Might want to create codes, make tables for ease of tracking where the data is lost
-# Missing primary data: Condition, DV
 dir.create("debug")
 fail.nodata <- dat %>% 
   filter(is.na(DV) | is.na(Violence) | is.na(Difficulty) | is.na(Condition))
@@ -63,24 +61,18 @@ fail.badsesh <- dat %>%
   filter(goodSession == "No") %>% 
   select(Subject)
 
-# Count up failures of method
-# Savvy to hypothesis
-length(fail.savvy$Subject)
-#   plus took damage / died in easy game / took no damage in hard game
-length(setdiff(c(fail.easydie$Subject, fail.easyharm$Subject, fail.hard),
-               fail.savvy$Subject))
-# plus misc failures
-length(setdiff(fail.badsesh$Subject,
-               c(fail.easydie$Subject, fail.easyharm$Subject, fail.hard, fail.savvy$Subject)))
-
-# RA cited exp failure
+# RA cited exp failure, 41
 length(fail.badsesh$Subject)
-#   plus took damage / died in easy game / took no damage in hard game
+#   plus took damage / died in easy game / took no damage in hard game, 3
 length(setdiff(c(fail.easydie$Subject, fail.easyharm$Subject, fail.hard),
                fail.badsesh$Subject))
-#   plus savvy to hypothesis
+#   plus savvy to hypothesis, 114
 length(setdiff(fail.savvy$Subject, 
                c(fail.easydie$Subject, fail.easyharm$Subject, fail.hard, 
+                 fail.badsesh$Subject)))
+#   plus no or conflicting data, 13
+length(setdiff(c(fail.nodata$Subject, fail.conflict$Subject),
+               c(fail.savvy$Subject, fail.easydie$Subject, fail.easyharm$Subject, fail.hard, 
                  fail.badsesh$Subject)))
 
 # Find and correct merge errors ----

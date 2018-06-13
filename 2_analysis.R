@@ -146,6 +146,12 @@ dat %>%
   write.table("Gamevars.txt", sep="\t", row.names=F)
 
 # ANOVA models of primary outcome ----
+# Make cell means
+dat %>% 
+  group_by(Violence, Difficulty) %>% 
+  summarize( n = n(), m = mean(DV), sd = sd(DV)) %>% 
+write.table("AggressionTable.txt", sep = "\t", row.names=F)
+
 # Full model, left hand
 m1 = lm(DV ~ Difficulty * Violence * L2d4d_std, data = dat,
         contrasts = list(Difficulty = "contr.sum",
