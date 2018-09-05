@@ -1,6 +1,7 @@
+# Clean the data by removing merge conflicts, making nicer column names,
+#   and counting up subjects who were excluded for one reason or another
 
-
-dat = read.delim("full_data.txt", stringsAsFactors = F) %>% 
+dat <- read.delim("full_data.txt", stringsAsFactors = F) %>% 
   slice(1:446) # discard the blank rows at the bottom
 stash.names <- names(dat)
 
@@ -55,6 +56,12 @@ fail.hard <- dat %>%
 fail.savvy <- dat %>% 
   filter(Q1.a == 1 & (Q1.b == 0 & Q1.c == 0 & Q1.d == 0 & Q1.e == 0))  %>% 
   select(Subject)
+dat %>% 
+  mutate(savvy = ifelse(Q1.a == 1 & (Q1.b == 0 & Q1.c == 0 & Q1.d == 0 & Q1.e == 0), 0, 1))  %>% 
+  with(table(Violence, savvy))
+dat %>% 
+  mutate(savvy = ifelse(Q1.a == 1 & (Q1.b == 0 & Q1.c == 0 & Q1.d == 0 & Q1.e == 0), 0, 1))  %>%
+  with(., chisq.test(Violence, savvy))
 
 # RAs didn't think session went well
 fail.badsesh <- dat %>% 

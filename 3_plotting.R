@@ -19,14 +19,20 @@ ggplot(dat, aes(x=DV, fill=Violence)) +
   scale_fill_hue(h.start=180-15,direction=-1) +
   theme(legend.position="none")
 
+# Boxplot with overplotted mean
+# TODO: Possible to add error bars to the mean?
 ggplot(dat, aes(x=Violence, y=DV)) + 
   facet_grid(~Difficulty) +
   #geom_violin(aes(fill = Violence)) +
   geom_boxplot(width=.5, notch=T) +
   stat_summary(fun.y="mean", geom="point", shape=20, size=10, col="grey50") +
-  stat_summary(fun.y="median", geom="point", shape=20, size=6, col="black") +
+  #stat_summary(fun.y="median", geom="point", shape=20, size=6, col="black") +
   scale_x_discrete("Condition") +
   scale_y_continuous("Aggression")
+
+# TODO: R2 was asking about QQ plots. i'm not sure how much this reveals.
+qqplot(x = dat$DV[dat$Violence == "Less Violent"], y = dat$DV[dat$Violence == "Violent"])
+
 
 datSum <- dat %>% 
   group_by(Violence, Difficulty) %>% 
@@ -142,7 +148,7 @@ ggplot(data=dat, aes(x=R2d4d, y=DV, col=Violence)) +
 
 # faceted scatterplot w/ right-hand 2d4d:
 ggplot(data=dat, aes(x=R2d4d, y=DV)) +
-  geom_point(cex=1, alpha=.75) +
+  geom_jitter(width = 0, height = .05,cex=1, alpha=.75) +
   geom_smooth(method="lm")+
   #labs(title="Null effects of 2d4d ratio (right hand)") +
   xlab("Right-hand 2d4d ratio") +
@@ -155,7 +161,7 @@ ggsave("r2d4d_x_2x2.png", width=6, height=3.7, units="in")
 
 # faceted scatterplot w/ left-hand 2d4d:
 ggplot(data=dat, aes(x=L2d4d, y=DV)) +
-  geom_point(cex=1, alpha=.75) +
+  geom_jitter(width = 0, height = .05, cex=1, alpha=.5) +
   geom_smooth(method="lm")+
   #labs(title="Null effects of 2d4d ratio (left hand)") +
   xlab("Left-hand 2d4d ratio") +
@@ -167,7 +173,7 @@ ggplot(data=dat, aes(x=L2d4d, y=DV)) +
 ggsave("l2d4d_x_2x2.png", width=6, height=3.7, units="in")
 
 ggplot(data = dat, aes(x = feedback.NA, y = DV)) +
-  geom_point() +
+  geom_jitter(height = .03, width = .03, alpha = .5) +
   geom_smooth() +
   xlab("Experienced provocation") +
   ylab("Coldpressor duration")

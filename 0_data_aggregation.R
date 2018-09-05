@@ -1,4 +1,4 @@
-# different approach
+# Aggregating questionnaires, looking for miscodings and inter-coder reliability
 library(readxl)
 library(tidyverse)
 

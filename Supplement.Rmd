@@ -93,3 +93,13 @@ Another possibility is that participants completed the coldpressor assignment in
 We conducted a 2 Violence × 2 Difficulty ANOVA with a logistic link function. Violence did not appear to influence aggression, `r report_z(model3, "vioContr")`. Difficulty also had a minimal effect on aggression, `r report_z(model3, "diffContr")`.	Application of composite irritation as a covariate to these models revealed an effect of composite irritation, `r report_z(model3.5, "feedback.NA")`, but did not increase the estimated effects of violence, difficulty, or their interaction.
 
 Main effects of 2D:4D on aggression were again negligible. Left 2D:4D did not predict aggression, `r report_z(model1, "L2d4d_std")`, nor did right 2D:4D, `r report_z(model2, "R2d4d_std")`. Application of composite irritation as a covariate did not influence the estimated effect. Higher-order interactions of 2D:4D with factors of Violence or Difficulty were not supported by the results (all |*t*| < 1.53).
+
+###Ordinal regression.
+<!--- May benefit from more detail, or just some tables --->
+The outcome could also be treated as an ordinal value. We used ordinal logistic regression via the "ordinal" package for R (Christensen, 2018) to fit the 2 Violence × 2 Difficulty ANOVA. No significant effects were observed. Addition of left or right 2d4d ratio to these models revealed no significant effects.
+
+Applying composite irritation as a covariate generally did not affect the results. As with the censored regression approach above, the Violence × Difficulty × Right 2D:4D interaction just reached significance after application of the covariate (*p* = .019).
+
+
+
+

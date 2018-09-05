@@ -92,6 +92,10 @@ dat$vioNum = ifelse(dat$Violence == "Violent", 1, 0)
 dat$diffNum = ifelse(dat$Difficulty == "Hard", 1, 0)
 # Make corrleation table to check random assignment
 cor(dat[,c("vioNum", "diffNum", "L2d4d", "R2d4d")], use="pairwise.complete.obs") 
+# Somebody wants Kendall's Tau
+cor(dat[,c("vioNum", "diffNum", "L2d4d", "R2d4d")], use="pairwise.complete.obs",
+    method = "kendall") 
+
 # Could make further cor tables from here.
 
 # Manipulation checks ----
@@ -117,6 +121,8 @@ ci.smd(smd = (vioMeans[2] - vioMeans[1]) / pool.sd(vioSDs, vioN),
 # Irritation and DV
 check2 <- lm(DV ~ feedback.NA, data = dat)
 summary(check2)
+# For R2, kendall's tau
+with(dat, cor(DV, feedback.NA, use = "pairwise", method = "kendall")) # a little less
 
 check2.1 = lm(DV ~ feedback.PA + feedback.NA, data=dat)
 summary(check2.1)
@@ -344,6 +350,29 @@ summary(model3.5)
 kruskal.test(DV ~ Violence, data = dat)
 kruskal.test(DV ~ Difficulty, data = dat)
 kruskal.test(DV ~ interaction(Violence, Difficulty), data = dat)
+
+# Ordinal logistic regression, as suggested by R2 ----
+#install.packages('ordinal')
+library(ordinal)
+
+# 2x2
+ordmod <- clm(ordered(DV) ~ Violence * Difficulty, data = dat)
+anova(ordmod, type = "III")
+# 2d4d models
+ordmod.l <- clm(ordered(DV) ~ Violence * Difficulty * L2d4d_std, data = dat)
+anova(ordmod.l, type = "III")
+ordmod.r <- clm(ordered(DV) ~ Violence * Difficulty * R2d4d_std, data = dat)
+anova(ordmod.r, type = "III")
+
+# with covariate
+# 2x2
+ordmod.5 <- clm(ordered(DV) ~ Violence * Difficulty + feedback.NA, data = dat)
+anova(ordmod.5, type = "III")
+# 2d4d models
+ordmod.l.5 <- clm(ordered(DV) ~ Violence * Difficulty * L2d4d_std + feedback.NA, data = dat)
+anova(ordmod.l.5, type = "III")
+ordmod.r.5 <- clm(ordered(DV) ~ Violence * Difficulty * R2d4d_std + feedback.NA, data = dat)
+anova(ordmod.r.5, type = "III")
 
 # Exploratory cross-sectional analyses ----
 # Does affective experience of game predict aggression? No.
