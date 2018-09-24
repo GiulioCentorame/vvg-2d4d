@@ -72,6 +72,7 @@ diff3 <- lm(discomfort ~ Difficulty * Violence, data = dat)
 diff4 <- lm(gore ~  Difficulty * Violence, data = dat)
 summary(diff1) # main effects + interaction
 summary(diff2) # big effect of game difficulty
+compute.es::tes(6.154, table(dat$Difficulty)[1], table(dat$Difficulty)[2])
 summary(diff3) # big effect of game difficulty
 summary(diff4) # solid manipulation check
 
@@ -108,6 +109,8 @@ vioSDs = tapply(dat$violence, dat$Violence, sd, na.rm=T)
 vioN = table(dat$Violence)
 ci.smd(smd = (vioMeans[2] - vioMeans[1]) / pool.sd(vioSDs, vioN), 
        n.1 = vioN[1], n.2 = vioN[2])
+# and for difficulty on violence?
+compute.es::fes(0.448, n.1 = vioN[1], n.2 = vioN[2], verbose = F)[,c("d", "l.d", "u.d")]
 
 # Difficulty manipulation?
 # manip check
