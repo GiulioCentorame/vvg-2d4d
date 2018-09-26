@@ -113,9 +113,9 @@ ci.smd(smd = (vioMeans[2] - vioMeans[1]) / pool.sd(vioSDs, vioN),
 compute.es::fes(0.448, n.1 = vioN[1], n.2 = vioN[2], verbose = F)[,c("d", "l.d", "u.d")]
 
 # Difficulty manipulation?
-# manip check
-# manipCheckDifficulty = lm(composite_challenge ~ Violence*Difficulty, data=dat) %>% summary()
-# manipCheckDifficulty
+group_by(dat, Difficulty) %>% 
+  summarise(m = mean(challenge, na.rm = T), sd = sd(challenge, na.rm = T))
+
 # # ncp is "generally the observed t-statistic from comparing the two groups
 # # see ?ci.smd
 # ci.smd(ncp = manipCheckDifficulty$coefficients["Difficulty1", 3],
