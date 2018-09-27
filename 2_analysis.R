@@ -83,10 +83,6 @@ select(dat, Game.1:Game.6) %>%
 select(dat, Game.1:Game.6) %>% 
   fa(nfactors = 3)
 
-# Make grand means and sds ----
-means = sapply(dat, mean, na.rm = T)
-sds = sapply(dat, sd, na.rm = T)
-
 # Make correlation table ----
 # Make numerics to check point-biserial correlations...
 dat$vioNum = ifelse(dat$Violence == "Violent", 1, 0)
@@ -132,8 +128,13 @@ summary(check2.1)
 # compute.es::tes(tstat = 3.226, 
 #     N     = summary(check2)$df[2]+3)
 
-# Irritation not fostered by game violence
+# Irritation not caused by game violence
 m.provoke <- lm(feedback.NA ~  Violence * Difficulty, data = dat)
+# Irritation not related to 2d4d?
+l2d4d_provoke <- lm(feedback.NA ~  L2d4d_std, data = dat)
+r2d4d_provoke <- lm(feedback.NA ~  R2d4d_std, data = dat)
+summary(l2d4d_provoke)
+summary(r2d4d_provoke)
 
 # Gameplay variables
 dat %>%
