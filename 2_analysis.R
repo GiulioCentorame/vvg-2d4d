@@ -7,6 +7,9 @@ library(psych)
 # install.packages('devtools'); library(devtools); install_github("Joe-Hilgard/hilgard")
 library(hilgard)
 
+# configure for orthogonal contrasts, not dummy codes
+options(contrasts = c("contr.sum", "contr.sum"))
+
 # Data import ----
 dat = read.delim("clean_data.txt", stringsAsFactors = F)
 # Convert relevant columns to factors
@@ -59,7 +62,7 @@ efa2 <- select(set.efa2, -Subject) %>%
 # factor 1: exciting, engaging, satisfying & effective guns, enjoyed game
 # factor 2: challenging, stressful, requires reflexes, good fight, mental effort
 # factor 3: hard to control, hard to navigate, uncomfortable with controls
-# factor 4: violence and aggression
+# factor 4: violence and aggression, but also how satisfying and effective the guns were...
 set.efa2 <- cbind(set.efa2, efa2$scores) %>% 
   select("excitement" = MR2, "challenge" = MR1, "discomfort" = MR4, 
          "gore" = MR3, everything())
@@ -74,7 +77,9 @@ summary(diff1) # main effects + interaction
 summary(diff2) # big effect of game difficulty
 compute.es::tes(6.154, table(dat$Difficulty)[1], table(dat$Difficulty)[2])
 summary(diff3) # big effect of game difficulty
-summary(diff4) # solid manipulation check
+summary(diff4) # effects of both difficulty and violence and interaction
+group_by(dat, Difficulty, Violence) %>% 
+  summarize(m = mean(gore, na.rm = T), sd = sd(gore, na.rm = T))
 
 # Make factors out of gameplay variables
 # or don't -- factor analysis ends in Heywood cases
@@ -94,10 +99,11 @@ cor(dat[,c("vioNum", "diffNum", "L2d4d", "R2d4d")], use="pairwise.complete.obs",
     method = "kendall") 
 
 # Could make further cor tables from here.
+summary(dat$age)
 
 # Manipulation checks ----
 # Violent content manipulation?
-check1 = aov(violence ~ Violence*Difficulty, data=dat)
+check1 = lm(violence ~ Violence*Difficulty, data=dat)
 summary(check1)
 # effect size d
 vioMeans = tapply(dat$violence, dat$Violence, mean, na.rm=T)
