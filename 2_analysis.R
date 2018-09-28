@@ -6,6 +6,7 @@ library(BayesFactor)
 library(psych)
 # install.packages('devtools'); library(devtools); install_github("Joe-Hilgard/hilgard")
 library(hilgard)
+library(lsmeans)
 
 # configure for orthogonal contrasts, not dummy codes
 options(contrasts = c("contr.sum", "contr.sum"))
@@ -36,7 +37,8 @@ set.efa <- dat %>%
 # Perform PCA
 set.efa %>% 
   select(-Subject) %>% 
-  fa.parallel() # 2 factors / 1 component
+  fa.parallel() 
+# 2 factors / 1 component
 efa <- select(set.efa, -Subject) %>% 
   fa(nfactors = 2) #factor 1 is negative affect, factor 2 is positive affect
 # append factor scores to set.efa and rename to PA and NA
@@ -54,9 +56,9 @@ set.efa2 = dat %>%
   filter(complete.cases(.)) 
 # Perform parallel analysis
 set.efa2 %>% 
-  select(easy.nav:exhausting) %>% 
-  fa.parallel(fm = 'pa') # fm = pa because complained about minres default 
-# 4 factors??
+  select(easy.nav:enjoyed) %>% 
+  fa.parallel() 
+# suggests 4 factors
 efa2 <- select(set.efa2, -Subject) %>% 
   fa(nfactor = 4) 
 # factor 1: exciting, engaging, satisfying & effective guns, enjoyed game
@@ -78,8 +80,16 @@ summary(diff2) # big effect of game difficulty
 compute.es::tes(6.154, table(dat$Difficulty)[1], table(dat$Difficulty)[2])
 summary(diff3) # big effect of game difficulty
 summary(diff4) # effects of both difficulty and violence and interaction
-group_by(dat, Difficulty, Violence) %>% 
-  summarize(m = mean(gore, na.rm = T), sd = sd(gore, na.rm = T))
+
+
+# let's get means and SDs of manipulation checks
+means_sds <- group_by(dat, Difficulty, Violence) %>% 
+  summarize_at(.funs = funs(mean, sd),
+               .vars = vars(excitement:gore, violence, aggressed, challenging),
+               na.rm = T) %>% 
+  mutate_if(.predicate = is.numeric,
+            .funs = round,
+            digits = 3)
 
 # Make factors out of gameplay variables
 # or don't -- factor analysis ends in Heywood cases
@@ -113,6 +123,10 @@ ci.smd(smd = (vioMeans[2] - vioMeans[1]) / pool.sd(vioSDs, vioN),
        n.1 = vioN[1], n.2 = vioN[2])
 # and for difficulty on violence?
 compute.es::fes(0.448, n.1 = vioN[1], n.2 = vioN[2], verbose = F)[,c("d", "l.d", "u.d")]
+# do people see their behavior in Chex Quest as aggressive?
+check1.1 = lm(aggressed ~ Violence*Difficulty, data=dat)
+summary(check1.1)
+lsmeans(check1.1, c("Violence", "Difficulty")) 
 
 # Difficulty manipulation?
 group_by(dat, Difficulty) %>% 
