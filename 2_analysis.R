@@ -16,8 +16,8 @@ dat = read.delim("clean_data.txt", stringsAsFactors = F)
 # Convert relevant columns to factors
 factorList = c("RA", "Subject", "Station","Condition", "Violence", "Difficulty")
 for (i in factorList) dat[,i] = as.factor(dat[,i])
-# Contrast code violence and difficulty (-1, 1)
 
+# Contrast code violence and difficulty (-1, 1)
 dat$Violence = factor(dat$Violence) %>% relevel("Violent") %>% C(sum)
 dat$Difficulty = factor(dat$Difficulty) %>% relevel("Hard") %>% C(sum)
 # discard conflicts
@@ -132,6 +132,7 @@ lsmeans(check1.1, c("Violence", "Difficulty"))
 group_by(dat, Difficulty) %>% 
   summarise(m = mean(challenge, na.rm = T), sd = sd(challenge, na.rm = T))
 
+lm(challenge ~ Violence * Difficulty, data = dat) %>% summary()
 # # ncp is "generally the observed t-statistic from comparing the two groups
 # # see ?ci.smd
 # ci.smd(ncp = manipCheckDifficulty$coefficients["Difficulty1", 3],
@@ -381,22 +382,22 @@ library(ordinal)
 
 # 2x2
 ordmod <- clm(ordered(DV) ~ Violence * Difficulty, data = dat)
-anova(ordmod, type = "III")
+summary(ordmod)
 # 2d4d models
 ordmod.l <- clm(ordered(DV) ~ Violence * Difficulty * L2d4d_std, data = dat)
-anova(ordmod.l, type = "III")
+summary(ordmod.l)
 ordmod.r <- clm(ordered(DV) ~ Violence * Difficulty * R2d4d_std, data = dat)
-anova(ordmod.r, type = "III")
+summary(ordmod.r)
 
 # with covariate
 # 2x2
 ordmod.5 <- clm(ordered(DV) ~ Violence * Difficulty + feedback.NA, data = dat)
-anova(ordmod.5, type = "III")
+summary(ordmod.5)
 # 2d4d models
 ordmod.l.5 <- clm(ordered(DV) ~ Violence * Difficulty * L2d4d_std + feedback.NA, data = dat)
-anova(ordmod.l.5, type = "III")
+summary(ordmod.l.5)
 ordmod.r.5 <- clm(ordered(DV) ~ Violence * Difficulty * R2d4d_std + feedback.NA, data = dat)
-anova(ordmod.r.5, type = "III")
+summary(ordmod.r.5)
 
 # Exploratory cross-sectional analyses ----
 # Does affective experience of game predict aggression? No.
@@ -439,6 +440,12 @@ ex2 <- (lm(DV ~ I(Game.4+Game.5), data = dat))
 
 ggplot(dat, aes(x = Game.2, y = DV, col = Violence)) + geom_point() + geom_smooth()
 
+# R1: "Was perception as violent related to aggression, across & within the 4 conditions
+summary(lm(DV ~ violence, data = dat)) # across
+summary(lm(DV ~ violence, data = dat, subset = Condition == 1)) # within 1
+summary(lm(DV ~ violence, data = dat, subset = Condition == 2)) # within 2
+summary(lm(DV ~ violence, data = dat, subset = Condition == 3)) # within 3
+summary(lm(DV ~ violence, data = dat, subset = Condition == 4)) # within 4
 
 # Save output for calling in .RMD file ----
 save.image()

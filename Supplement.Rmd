@@ -100,6 +100,11 @@ The outcome could also be treated as an ordinal value. We used ordinal logistic 
 
 Applying composite irritation as a covariate generally did not affect the results. As with the censored regression approach above, the Violence × Difficulty × Right 2D:4D interaction just reached significance after application of the covariate (*p* = .019).
 
+```{r, echo = F}
+
+```
+
+
 ###Exploratory analyses.
 The 6 items about the interaction with the partner were submitted to parallel analysis. Parallel analysis recommended two factors. Factor 1 had loadings >.65 on irritated, angered, and annoyed, with loadings < .3 otherwise. Factor 2 had loadings .57, .61, and .89 for happy, helpful, and pleased.
 

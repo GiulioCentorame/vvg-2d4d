@@ -81,6 +81,13 @@ length(setdiff(fail.savvy$Subject,
 length(setdiff(c(fail.nodata$Subject, fail.conflict$Subject),
                c(fail.savvy$Subject, fail.easydie$Subject, fail.easyharm$Subject, fail.hard, 
                  fail.badsesh$Subject)))
+# TODO: What if they say they knew their partner?
+# Then the results are even more null re: game violence. hm
+
+# fuck, even after exclusions people say they aren't surprised they didn't trade essays
+table(dat$Surprise)
+# did i ever code up that 1-5 likert measure of suspicion? yes, Suspected
+barplot(table(dat$Suspected))
 
 # Find and correct merge errors ----
 # Here I gather all columns into one, filter for merge errors, then spread into subjects again
