@@ -55,11 +55,10 @@ dbl_code_count(distraction)
 temp1 = read_excel("./raw-data-prep/raw_data/Note_sheet_AM.xlsx")
 temp2 = read_excel("./raw-data-prep/raw_data/Note_sheet_CH.xlsx")
 temp3 = read_excel("./raw-data-prep/raw_data/Note_sheet_RP.xlsx")
-temp4 = read_excel("./raw-data-prep/raw_data/Note_sheet_TG.xlsx")
+temp4 = read_excel("./raw-data-prep/raw_data/Note_sheet_TG.xlsx") # date is chr
 temp5 = read_excel("./raw-data-prep/raw_data/Note_sheet_TH.xlsx")
 # bind rows to form full spreadsheet across all RAs
-# I'm dropping the Date & Time columns because they're a mess
-note_sheet = bind_rows(temp1[,-(1:2)], temp2[,-(1:2)], temp3[,-(1:2)], temp4[,-(1:2)], temp5[,-(1:2)])
+note_sheet = bind_rows(temp1, temp2, temp3, temp4, temp5)
 # Aggregate. Double-coded entries will combine, unless they mismatch
 note_sheet.chr = note_sheet %>% 
   group_by(Subject) %>% 
