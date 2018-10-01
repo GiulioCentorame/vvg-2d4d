@@ -90,7 +90,9 @@ table(dat$Surprise)
 barplot(table(dat$Suspected))
 
 # Find and correct merge errors ----
-# Here I gather all columns into one, filter for merge errors, then spread into subjects again
+# Here I gather all columns into one, 
+# filter for merge errors, 
+# then spread into subjects again
 debug.dat <- dat %>% 
   gather(key, value, Q1.a:R2d4d) %>% 
   filter(value %in% c(-999, "CONFLICT!")) %>% 
@@ -171,7 +173,6 @@ fixed.dat <- full_join(wide.num, wide.chr, by = "Subject")
 fixed.dat <- fixed.dat %>% 
   select(names(dat))
 dat <- fixed.dat
-
 
 # Discard bad subjects ----
 grep("fail*", ls(), value = T) # list all "fail" objects

@@ -55,7 +55,7 @@ dbl_code_count(distraction)
 temp1 = read_excel("./raw-data-prep/raw_data/Note_sheet_AM.xlsx")
 temp2 = read_excel("./raw-data-prep/raw_data/Note_sheet_CH.xlsx")
 temp3 = read_excel("./raw-data-prep/raw_data/Note_sheet_RP.xlsx")
-temp4 = read_excel("./raw-data-prep/raw_data/Note_sheet_TG.xlsx") # date is chr
+temp4 = read_excel("./raw-data-prep/raw_data/Note_sheet_TG.xlsx")
 temp5 = read_excel("./raw-data-prep/raw_data/Note_sheet_TH.xlsx")
 # bind rows to form full spreadsheet across all RAs
 note_sheet = bind_rows(temp1, temp2, temp3, temp4, temp5)
@@ -66,7 +66,11 @@ note_sheet.chr = note_sheet %>%
 note_sheet.num = note_sheet %>% 
   group_by(Subject) %>% 
   summarise_if(is.numeric, merge.numeric)
-note_sheet2 <- full_join(note_sheet.num, note_sheet.chr, by = "Subject")
+# oops, date and time are neither numeric nor character
+note_sheet.dttm <- select(note_sheet, Subject, Date, Time) %>% 
+  distinct()
+note_sheet2 <- full_join(note_sheet.num, note_sheet.chr, by = "Subject") %>% 
+  full_join(note_sheet.dttm, by = "Subject")
 # Check on data w/ conflicts
 note_sheet2 %>% 
   filter(Condition == -999)
