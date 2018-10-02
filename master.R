@@ -15,5 +15,5 @@ knit("Supplement.Rmd")
 
 # sink session_info() output for package versioning
 sink("session_info.txt")
-session_info()
+devtools::session_info()
 sink(file = NULL)

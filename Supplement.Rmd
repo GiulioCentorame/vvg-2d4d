@@ -99,12 +99,17 @@ The outcome could also be treated as an ordinal value. We used ordinal logistic 
 Applying composite irritation as a covariate generally did not affect the results. As with the censored regression approach above, the Violence × Difficulty × Right 2D:4D interaction just reached significance after application of the covariate (*p* = .019).
 
 ```{r, echo = F}
-
+summary(ordmod)
 ```
 
 
 ###Exploratory analyses.
 The 6 items about the interaction with the partner were submitted to parallel analysis. Parallel analysis recommended two factors. Factor 1 had loadings >.65 on irritated, angered, and annoyed, with loadings < .3 otherwise. Factor 2 had loadings .57, .61, and .89 for happy, helpful, and pleased.
+
+```{r}
+round(efa$loadings, 2)
+```
+
 
 The 18 items about the gameplay session were submitted to parallel analysis. Parallel analysis recommended four factors. Loadings are displayed in [TABLE X]. Loadings smaller than .1 are not displayed.  The first factor appears to represent excitement and enjoyment of the game. The second factor appears to represent the extent to which the game was stressful. The third factor appears to represent whether the participant struggled with the game's controls and navigation. The fourth factor featured items indicating whether the player perceived the game as involving violence and gore, but it also featured loadings regarding whether the player's guns/zorchers were satisfying and effective.
 
@@ -112,4 +117,21 @@ The 18 items about the gameplay session were submitted to parallel analysis. Par
 round(efa2$loadings, 2)
 ```
 
-Participants' gameplay variables were submitted to parallel analysis. However, factor extraction resulted in Heywood cases. Each was analyzed singly as a potential predictor of aggressive behavior. Players with more kills/zorches gave lower coldpressor assignments (p = .013). Players firing more total combined bullets and shotgun shells also gave lower coldpressor assignments (p = .013). No other effects were statistically significant. Because these are exploratory tests and would not survive multiple comparison correction, we do not offer further consideration of these effects.
+Participants' gameplay variables were submitted to parallel analysis. However, factor extraction resulted in Heywood cases. Each was analyzed singly as a potential predictor of aggressive behavior. Players with more kills/zorches gave lower coldpressor assignments (`r report_t(ex1, "Game.2", "b")`). Players firing more total combined bullets and shotgun shells also gave lower coldpressor assignments (`r report_t(ex2, "I(Game.4 + Game.5)", "b")`). No other effects were statistically significant. Because these are exploratory tests and would not survive multiple comparison correction, we do not offer further consideration of these effects.
+
+```{r, echo = F, warning = F}
+lm(DV ~ Violence*Difficulty*I((L2d4d_std + R2d4d_std)/2), data = dat) %>% 
+  summary()
+```
+
+### Nonparametric correlations
+
+Here's a table of Kendall's Tau.
+
+```{r, echo = F}
+dat %>% 
+  select(vioNum, diffNum, DV, feedback.NA, L2d4d_std, R2d4d_std) %>% 
+  cor(use = "pairwise", method = "kendall") %>% 
+  round(3)
+```
+
