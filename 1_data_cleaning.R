@@ -1,6 +1,18 @@
 # Clean the data by removing merge conflicts, making nicer column names,
 #   and counting up subjects who were excluded for one reason or another
 
+library(readxl)
+library(rms)
+library(tidyverse)
+library(lubridate)
+library(MBESS)
+library(censReg)
+library(BayesFactor)
+library(psych)
+# install.packages('devtools'); library(devtools); install_github("Joe-Hilgard/hilgard")
+library(hilgard)
+library(lsmeans)
+
 dat <- read.delim("full_data.txt", stringsAsFactors = F) %>% 
   slice(1:446) # discard the blank rows at the bottom
 stash.names <- names(dat)
@@ -8,10 +20,37 @@ stash.names <- names(dat)
 # remove debug rows
 dat <- filter(dat, !(Subject %in% c(666, 900)))
 
+# TODO: make session identifier (subjects within sessions)
+# how do i do this?
+# make date-time column
+dat <- mutate(dat, 
+              datetime = as_datetime(paste(dat$Date, substring(dat$Time, 12))),
+              # ps within minutes of each other are same session
+             datetime = floor_date(datetime, "10 mins"))
+
+sessionInfo <- select(dat, datetime) %>% 
+  filter(!is.na(datetime)) %>% 
+  # group by datetime and count up n per session, then label sessions
+  group_by(datetime) %>% 
+  summarize(n = n()) %>% 
+  mutate(session = 1:nrow(.))
+
+# make a code if the previous session was in the same day and involved > 1 subject
+sessionInfo <- mutate(sessionInfo, 
+       prev_sesh_time = lag(datetime),
+       prev_sesh_n = lag(n),
+       cooldown = datetime - prev_sesh_time,
+       warm_pitcher = case_when(prev_sesh_n > 1 & cooldown <= 60 ~ 1,
+                                TRUE ~ 0))
+
+# append sessionInfo data to full dataset
+dat <- left_join(dat, sessionInfo, by = "datetime")
+
 # look for missingness
 sapply(dat, function(x) sum(is.na(x)))
 # look for merge conflicts
 sapply(dat, function(x) sum(x == -999 | x == "CONFLICT!", na.rm = T))
+# i think this struggles with the datetime now
 
 # Create and rename columns ----
 
@@ -59,6 +98,7 @@ fail.savvy <- dat %>%
 dat %>% 
   mutate(savvy = ifelse(Q1.a == 1 & (Q1.b == 0 & Q1.c == 0 & Q1.d == 0 & Q1.e == 0), 0, 1))  %>% 
   with(table(Violence, savvy))
+# are people more likely to be savvy under one condition?
 dat %>% 
   mutate(savvy = ifelse(Q1.a == 1 & (Q1.b == 0 & Q1.c == 0 & Q1.d == 0 & Q1.e == 0), 0, 1))  %>%
   with(., chisq.test(Violence, savvy))
@@ -88,6 +128,7 @@ length(setdiff(c(fail.nodata$Subject, fail.conflict$Subject),
 table(dat$Surprise)
 # did i ever code up that 1-5 likert measure of suspicion? yes, Suspected
 barplot(table(dat$Suspected))
+# what are these conflicts now?
 
 # Find and correct merge errors ----
 # Here I gather all columns into one, 
@@ -169,6 +210,10 @@ wide.num <- spread(fused.num, key, value)
 wide.chr <- spread(fused.chr, key, value)
 fixed.dat <- full_join(wide.num, wide.chr, by = "Subject")
 
+# recover the date-time info
+fixed.dat <- select(dat, Subject, datetime, prev_sesh_time, cooldown) %>% 
+  left_join(fixed.dat, ., by = "Subject")
+
 # rearrange as the order it once was
 fixed.dat <- fixed.dat %>% 
   select(names(dat))
@@ -182,6 +227,8 @@ dat.pure = dat %>%
                           fail.easyharm$Subject, fail.hard$Subject, fail.nodata$Subject, 
                           fail.savvy$Subject)))
 
+
+
 # TODO: Notes from old cleaning code ----
 # may wish to use debriefing questionnaire columns:
 #   Suspected_Debrief Game.play.affect.distraction.time_Debrief or Surprise_Debrief
@@ -191,6 +238,15 @@ dat.pure = dat %>%
 
 # It looks like RA's decision of whether it was a good session or not
 # had nothing to do with whether subject listed vg & aggression or suspicion of DV
+
+# finally we can check whether warmer pitchers predict variance
+lm(DV ~ warm_pitcher, data = dat) %>% summary()
+lm(DV ~ cooldown, data = dat) %>% summary()
+
+filter(dat, cooldown > 10, cooldown < 300) %>% 
+  ggplot(aes(x = cooldown, y = DV, col = warm_pitcher)) +
+  geom_smooth() +
+  geom_jitter(width = 5, height = .1, alpha = .5)
 
 # Export ----
 write.table(dat.pure, "clean_data.txt", sep = "\t", row.names = F)

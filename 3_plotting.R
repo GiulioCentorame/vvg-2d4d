@@ -1,4 +1,14 @@
-library(ggplot2)
+library(readxl)
+library(rms)
+library(tidyverse)
+library(lubridate)
+library(MBESS)
+library(censReg)
+library(BayesFactor)
+library(psych)
+# install.packages('devtools'); library(devtools); install_github("Joe-Hilgard/hilgard")
+library(hilgard)
+library(lsmeans)
 
 bigtext =   theme(axis.title = element_text(size=14),
                   plot.title = element_text(size=16))

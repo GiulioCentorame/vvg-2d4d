@@ -1,7 +1,9 @@
+library(readxl)
 library(rms)
+library(tidyverse)
+library(lubridate)
 library(MBESS)
 library(censReg)
-library(tidyverse)
 library(BayesFactor)
 library(psych)
 # install.packages('devtools'); library(devtools); install_github("Joe-Hilgard/hilgard")
@@ -446,43 +448,6 @@ summary(lm(DV ~ violence, data = dat, subset = Condition == 1)) # within 1
 summary(lm(DV ~ violence, data = dat, subset = Condition == 2)) # within 2
 summary(lm(DV ~ violence, data = dat, subset = Condition == 3)) # within 3
 summary(lm(DV ~ violence, data = dat, subset = Condition == 4)) # within 4
-
-# does coldpressor go up as the day goes on, indicating less cold pitchers?
-# make date-time column
-dat <- mutate(dat, datetime = as_datetime(paste(dat$Date, substring(dat$Time, 12))))
-
-# TODO: make session identifier (subjects within sessions)
-# how do i do this?
-select(dat, datetime) %>% 
-  distinct() %>% 
-  filter(!is.na(datetime)) %>% 
-  mutate(session = 1:nrow(.))
-
-select(dat, Subject, datetime, DV) %>% 
-  group_by(datetime) %>% 
-  arrange(Subject)
-# what a pain that Date & Time should be one column...
-dat %>% 
-  # transmute(Date = ymd(Date),
-  #        Time = as_datetime(Time),
-  #        DateTime = paste0(date(Date), hour(Time), minute(Time))) %>% 
-  group_by(ymd(Date)) %>% 
-  arrange(Subject) %>% 
-  slice(1) %>%  # first subject of every day
-  ungroup() %>% 
-  dplyr::summarise(m = mean(DV), sd = sd(DV), n = n(), se = sd/sqrt(n))
-
-dat %>% 
-  # transmute(Date = ymd(Date),
-  #        Time = as_datetime(Time),
-  #        DateTime = paste0(date(Date), hour(Time), minute(Time))) %>% 
-  group_by(ymd(Date)) %>% 
-  arrange(Subject) %>% 
-  slice(-1) %>%  # first subject of every day
-  ungroup() %>% 
-  dplyr::summarise(m = mean(DV), sd = sd(DV), n = n(), se = sd/sqrt(n)) # all but the first subject. 
-
-# gads... is task order a big source of variance because later coldpressors aren't as cold?
 
 # Save output for calling in .RMD file ----
 save.image()

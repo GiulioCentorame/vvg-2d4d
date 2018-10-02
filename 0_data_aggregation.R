@@ -1,6 +1,15 @@
 # Aggregating questionnaires, looking for miscodings and inter-coder reliability
 library(readxl)
+library(rms)
 library(tidyverse)
+library(lubridate)
+library(MBESS)
+library(censReg)
+library(BayesFactor)
+library(psych)
+# install.packages('devtools'); library(devtools); install_github("Joe-Hilgard/hilgard")
+library(hilgard)
+library(lsmeans)
 
 source("helpers/merge.R")
 
