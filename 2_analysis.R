@@ -402,12 +402,16 @@ ordmod.r.5 <- clm(ordered(DV) ~ Violence * Difficulty * R2d4d_std + feedback.NA,
 summary(ordmod.r.5)
 
 # Exploratory cross-sectional analyses ----
-# Does affective experience of game predict aggression? No.
+# Does affective experience of game predict aggression?
 enjoy.efa <- lm(DV ~ excitement, data = dat) # p = .008
 # those who enjoyed game more likely to aggress
 challenge.efa <-lm(DV ~ challenge, data = dat)
 discomfort.efa <- lm(DV ~ discomfort, data = dat)
-summary(lm(DV ~ gore, data = dat))
+gore.efa <- lm(DV ~ gore, data = dat)
+
+lapply(list(enjoy.efa, challenge.efa, discomfort.efa, gore.efa), summary)
+
+summary(lm(DV ~ excitement * Violence, data = dat))
 
 # Does gameplay history predict aggression? No
 set.vgefa <- select(dat, often.played:vg.cumul)
@@ -422,9 +426,10 @@ vg1.efa <- (lm(DV ~ MR1, data = dat.efa))
 vg2.efa <- (lm(DV ~ MR2, data = dat.efa))
 
 # single-item relationships with DV
+# none of these are stat sig
 summary(lm(DV ~ often.played, data = dat))
 summary(lm(DV ~ FPS.experience, data = dat))
-summary(lm(DV ~ FPS.skill, data = dat))
+summary(lm(DV ~ FPS.skill, data = dat)) # p = .081
 summary(lm(DV ~ mkb.experience, data = dat))
 summary(lm(DV ~ vg.freq, data = dat))
 summary(lm(DV ~ vg.cumul, data = dat))

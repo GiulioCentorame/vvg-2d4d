@@ -13,6 +13,8 @@ source("3_plotting.R")
 knit("Results.Rmd")
 knit("Supplement.Rmd")
 
+
+
 # sink session_info() output for package versioning
 sink("session_info.txt")
 devtools::session_info()

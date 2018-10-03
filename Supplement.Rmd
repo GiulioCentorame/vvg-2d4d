@@ -110,12 +110,15 @@ The 6 items about the interaction with the partner were submitted to parallel an
 round(efa$loadings, 2)
 ```
 
-
 The 18 items about the gameplay session were submitted to parallel analysis. Parallel analysis recommended four factors. Loadings are displayed in [TABLE X]. Loadings smaller than .1 are not displayed.  The first factor appears to represent excitement and enjoyment of the game. The second factor appears to represent the extent to which the game was stressful. The third factor appears to represent whether the participant struggled with the game's controls and navigation. The fourth factor featured items indicating whether the player perceived the game as involving violence and gore, but it also featured loadings regarding whether the player's guns/zorchers were satisfying and effective.
 
 ```{r echo=F, warning = F}
 round(efa2$loadings, 2)
 ```
+
+<!---
+None of the measures of previous violent-game use or skill were significantly related to aggression. Could put tables in here if really needed I guess
+--->
 
 Participants' gameplay variables were submitted to parallel analysis. However, factor extraction resulted in Heywood cases. Each was analyzed singly as a potential predictor of aggressive behavior. Players with more kills/zorches gave lower coldpressor assignments (`r report_t(ex1, "Game.2", "b")`). Players firing more total combined bullets and shotgun shells also gave lower coldpressor assignments (`r report_t(ex2, "I(Game.4 + Game.5)", "b")`). No other effects were statistically significant. Because these are exploratory tests and would not survive multiple comparison correction, we do not offer further consideration of these effects.
 
@@ -123,6 +126,26 @@ Participants' gameplay variables were submitted to parallel analysis. However, f
 lm(DV ~ Violence*Difficulty*I((L2d4d_std + R2d4d_std)/2), data = dat) %>% 
   summary()
 ```
+
+### Manipulation checks
+
+Here's the full output for the effect of condition on the manipulation checks.
+
+"The game involved a great deal of violence":
+```{r, echo = F}
+summary(lm(violence ~ Difficulty * Violence, data = dat))
+```
+
+"I felt I behaved aggressively during the game":
+```{r, echo = F}
+summary(lm(aggressed ~ Violence*Difficulty, data = dat))
+```
+
+Latent factor representing challenge (challenging, stressful, violence, reflexes, difficult, mental effort, exhausting):
+```{r, echo = F}
+summary(lm(challenge ~ Violence*Difficulty, data = dat))
+```
+
 
 ### Nonparametric correlations
 
@@ -133,5 +156,20 @@ dat %>%
   select(vioNum, diffNum, DV, feedback.NA, L2d4d_std, R2d4d_std) %>% 
   cor(use = "pairwise", method = "kendall") %>% 
   round(3)
+```
+
+### Summary stats
+Here's a big table of all kinds of summary stats.
+```{r, echo = F}
+dat %>% 
+  group_by(Violence, Difficulty) %>% 
+  summarize_at(.funs = funs(mean(., na.rm = T), sd(., na.rm = T)),
+               .vars = vars(DV, feedback.NA, violence, aggressed, excitement, challenge,
+                            discomfort, gore, feedback.NA, feedback.PA)) %>% 
+  gather(key = "key", value = "value", DV_mean:feedback.PA_sd) %>% 
+  mutate(value = round(value, 2)) %>% 
+  separate(key, into = c("variable", "statistic"), sep = "_") %>% 
+  unite(col = "cell", Violence, Difficulty, statistic) %>% 
+  spread(key = "cell", value = value)
 ```
 
