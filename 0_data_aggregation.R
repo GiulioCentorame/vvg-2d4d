@@ -1,6 +1,7 @@
 # Aggregating questionnaires, looking for miscodings and inter-coder reliability
 library(readxl)
 library(rms)
+library(ordinal)
 library(tidyverse)
 library(lubridate)
 library(MBESS)
@@ -10,6 +11,7 @@ library(psych)
 # install.packages('devtools'); library(devtools); install_github("Joe-Hilgard/hilgard")
 library(hilgard)
 library(lsmeans)
+
 
 source("helpers/merge.R")
 
@@ -186,3 +188,4 @@ save(dat, file = "full_data.RData")
 dat %>% 
   select(-ends_with("_t")) %>% 
   write.table("full_data.txt", sep = "\t", row.names = F)
+

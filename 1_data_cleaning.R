@@ -3,6 +3,7 @@
 
 library(readxl)
 library(rms)
+library(ordinal)
 library(tidyverse)
 library(lubridate)
 library(MBESS)
@@ -12,6 +13,7 @@ library(psych)
 # install.packages('devtools'); library(devtools); install_github("Joe-Hilgard/hilgard")
 library(hilgard)
 library(lsmeans)
+
 
 dat <- read.delim("full_data.txt", stringsAsFactors = F) %>% 
   slice(1:446) # discard the blank rows at the bottom
@@ -49,8 +51,8 @@ dat <- left_join(dat, sessionInfo, by = "datetime")
 # look for missingness
 sapply(dat, function(x) sum(is.na(x)))
 # look for merge conflicts
-sapply(dat, function(x) sum(x == -999 | x == "CONFLICT!", na.rm = T))
-# i think this struggles with the datetime now
+select_if(dat, negate(is.POSIXt)) %>% 
+  sapply(., function(x) sum(x == -999 | x == "CONFLICT!", na.rm = T))
 
 # Create and rename columns ----
 
@@ -124,7 +126,7 @@ length(setdiff(c(fail.nodata$Subject, fail.conflict$Subject),
 # TODO: What if they say they knew their partner?
 # Then the results are even more null re: game violence. hm
 
-# fuck, even after exclusions people say they aren't surprised they didn't trade essays
+# geez, even after exclusions people say they aren't surprised they didn't trade essays
 table(dat$Surprise)
 # did i ever code up that 1-5 likert measure of suspicion? yes, Suspected
 barplot(table(dat$Suspected))
@@ -211,8 +213,8 @@ wide.chr <- spread(fused.chr, key, value)
 fixed.dat <- full_join(wide.num, wide.chr, by = "Subject")
 
 # recover the date-time info
-fixed.dat <- select(dat, Subject, datetime, prev_sesh_time, cooldown) %>% 
-  left_join(fixed.dat, ., by = "Subject")
+dat.datetime <- select(dat, Subject, datetime, prev_sesh_time, cooldown) 
+fixed.dat <- left_join(fixed.dat, dat.datetime, by = "Subject")
 
 # rearrange as the order it once was
 fixed.dat <- fixed.dat %>% 

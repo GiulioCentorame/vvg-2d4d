@@ -1,17 +1,17 @@
 # master script
 # install.packages(c('rms', 'MBESS', 'censReg', 'tidyverse', 'broom',
-# 'car', 'BayesFactor', 'psych', 'devtools', 'knitr', 'compute.es',
+# 'car', 'BayesFactor', 'psych', 'devtools', 'rmarkdown', 'compute.es',
 # 'GPArotation', 'ordinal'))
 # library(devtools)
 # install_github("Joe-Hilgard/hilgard")
-library(knitr)
+library(rmarkdown)
 
 source("0_data_aggregation.R")
 source("1_data_cleaning.R")
 source("2_analysis.R")
 source("3_plotting.R")
-knit("Results.Rmd")
-knit("Supplement.Rmd")
+render("Results.Rmd", "word_document")
+render("Supplement.Rmd", "pdf_document")
 
 
 

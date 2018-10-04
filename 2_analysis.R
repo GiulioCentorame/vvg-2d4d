@@ -1,5 +1,6 @@
 library(readxl)
 library(rms)
+library(ordinal)
 library(tidyverse)
 library(lubridate)
 library(MBESS)
@@ -9,6 +10,7 @@ library(psych)
 # install.packages('devtools'); library(devtools); install_github("Joe-Hilgard/hilgard")
 library(hilgard)
 library(lsmeans)
+
 
 # configure for orthogonal contrasts, not dummy codes
 options(contrasts = c("contr.sum", "contr.sum"))
@@ -379,8 +381,6 @@ kruskal.test(DV ~ Difficulty, data = dat)
 kruskal.test(DV ~ interaction(Violence, Difficulty), data = dat)
 
 # Ordinal logistic regression, as suggested by R2 ----
-#install.packages('ordinal')
-library(ordinal)
 
 # 2x2
 ordmod <- clm(ordered(DV) ~ Violence * Difficulty, data = dat)
