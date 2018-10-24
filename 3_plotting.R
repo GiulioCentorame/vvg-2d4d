@@ -45,6 +45,7 @@ ggplot(dat, aes(x=Violence, y=DV)) +
 # TODO: R2 was asking about QQ plots. i'm not sure how much this reveals.
 qqplot(x = dat$DV[dat$Violence == "Less Violent"], y = dat$DV[dat$Violence == "Violent"])
 
+# 
 
 datSum <- dat %>% 
   group_by(Violence, Difficulty) %>% 
@@ -109,6 +110,12 @@ ggplot(dat, aes(x=feedback.NA, y = DV)) +
   ggtitle("Dependent Variable is Sensitive") +
   bigtext
 #ggsave("DV-PCA_scatter.png", width = 5.5, height = 4, units="in")
+
+# Did players feel their in-game behavior was aggressive?
+ggplot(dat, aes(x = Violence, y = aggressed)) +
+  geom_boxplot(notch = T) +
+  #geom_jitter(height = .2, width = .3) +
+  facet_grid(~Difficulty)
 
 # Here be old plots. Lots to clean up:
 # TODO: Clean up all this junk
