@@ -43,7 +43,9 @@ ggplot(dat, aes(x=Violence, y=DV)) +
   scale_y_continuous("Aggression")
 
 # TODO: R2 was asking about QQ plots. i'm not sure how much this reveals.
-qqplot(x = dat$DV[dat$Violence == "Less Violent"], y = dat$DV[dat$Violence == "Violent"])
+qqplot(x = dat$DV[dat$Violence == "Less Violent"], y = dat$DV[dat$Violence == "Violent"],
+       xlab = "Chex Quest", ylab = "Brutal Doom",
+       main = "QQ-plot")
 
 # 
 
@@ -56,19 +58,39 @@ datSum <- dat %>%
          ll = mean - 1.96*se,
          ul = mean + 1.96*se)
 
+datLS <- lsmeans(m1, specs = c("Violence", "Difficulty"))
+
 ggplot(datSum, aes(x = Violence)) +
   geom_boxplot(aes(y = DV), dat) +
   geom_pointrange(aes(y = mean, ymin = ll, ymax = ul)) +
   facet_wrap(~Difficulty)
 
 ggplot(datSum, aes(x = Violence)) +
-  geom_jitter(aes(y = DV), width = .2, height = .1, alpha = .40, dat, col = "#669999") +
-  geom_pointrange(aes(y = mean, ymin = ll, ymax = ul), size = 1.25, col = "#ff0033", alpha = 1) +
+  geom_jitter(aes(y = DV), width = .15, height = .175, alpha = .30, dat
+              #, col = "#669999"
+              ) +
+  geom_pointrange(aes(y = mean, ymin = ll, ymax = ul), size = 1.25, 
+                  #col = "#ff0033", 
+                  alpha = 1) +
   facet_wrap(~Difficulty) +
-  scale_y_continuous("Aggression")
+  scale_y_continuous("Aggression") +
+  theme_bw()
+ggsave("DV-whisker.png", width = 5.5, height = 4, units="in")
+
+ggplot(tidy(datLS), aes(x = Violence)) +
+  geom_jitter(aes(y = DV), width = .15, height = .175, alpha = .30, dat
+              #, col = "#669999"
+  ) +
+  geom_pointrange(aes(y = estimate, ymin = conf.low, ymax = conf.high), size = 1.25, 
+                  #col = "#ff0033", 
+                  alpha = 1) +
+  facet_wrap(~Difficulty) +
+  scale_y_continuous("Aggression") +
+  theme_bw() # really minor differences
+
 
 # # Adding mean and CI to histogram is hideous
-# ggplot(dat, aes(x=DV)) + 
+# ggplot(dat, aes(x=DV)) +
 #   geom_bar() +
 #   facet_wrap(~Violence+Difficulty, nrow=2) +
 #   scale_x_discrete("Coldpressor Assignment", limits = c(1:9)) +
