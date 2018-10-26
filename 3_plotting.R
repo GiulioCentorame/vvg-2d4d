@@ -10,6 +10,7 @@ library(psych)
 # install.packages('devtools'); library(devtools); install_github("Joe-Hilgard/hilgard")
 library(hilgard)
 library(lsmeans)
+library(broom)
 load(".RData")
 
 bigtext <- theme(axis.title = element_text(size=14),
@@ -28,45 +29,20 @@ datSum <- dat %>%
 # or get it from the model with lsmeans
 datLS <- lsmeans(m1, specs = c("Violence", "Difficulty"))
 
-# Figure 1: histograms w/ facet wraps for conditions
-ggplot(dat, aes(x=DV)) + 
-  geom_bar() +
-  facet_wrap(~Violence+Difficulty, nrow=2) +
-  scale_x_discrete("Coldpressor Assignment", limits = c(1:9)) +
-  theme(strip.text.x = element_text(size = 12),
-        axis.title.x = element_text(size = 14))
-ggsave("Figure1.png", width = 5.5, height = 4, units="in")
-
-# Figure 2: feedback negative affect influences aggression
-ggplot(dat, aes(x=feedback.NA, y = DV)) +
-  geom_point(cex=2, alpha=.5, position=position_jitter(height=.1)) +
-  geom_smooth() +
-  scale_x_continuous("Experienced provocation")+
-  scale_y_continuous("Coldpressor duration") +
-  #ggtitle("Dependent Variable is Sensitive") +
-  bigtext
-ggsave("Figure2.png", width = 5.5, height = 4, units="in")
-
-ggplot(data = dat, aes(x = feedback.NA, y = DV)) +
-  geom_jitter(height = .1, width = .03, alpha = .5) +
-  geom_smooth() +
-  xlab("Experienced provocation") +
-  ylab("Coldpressor duration")
-ggsave("Figure2_alt.png", width = 4, height = 3, units = 'in')
-
 # R2 was asking about QQ plots. i'm not sure how much this reveals though
 qqplot(x = dat$DV[dat$Violence == "Less Violent"], y = dat$DV[dat$Violence == "Violent"],
        xlab = "Chex Quest", ylab = "Brutal Doom",
        main = "QQ-plot")
 
-# Figure 3: violence and difficulty on DV, jittered points with mean & CI
+# Figure 1: violence and difficulty on DV, jittered points with mean & CI
 ggplot(datSum, aes(x = Violence)) +
   geom_jitter(aes(y = DV), width = .15, height = .175, alpha = .30, dat) +
-  geom_pointrange(aes(y = mean, ymin = ll, ymax = ul), size = 1.25, alpha = 1) +
+  geom_point(aes(y = mean), size = 10, shape = 95) +
+  geom_linerange(aes(ymin = ll, ymax = ul), size = 1.25) +
   facet_wrap(~Difficulty) +
-  scale_y_continuous("Aggression") +
+  scale_y_continuous("Aggression", breaks = 1:9) +
   theme_bw()
-ggsave("Figure3.png", width = 5.5, height = 4, units="in")
+ggsave("Figure1.png", width = 5.5, height = 4, units="in")
 
 ggplot(tidy(datLS), aes(x = Violence)) +
   geom_jitter(aes(y = DV), width = .15, height = .175, alpha = .30, dat) +
@@ -75,7 +51,7 @@ ggplot(tidy(datLS), aes(x = Violence)) +
   scale_y_continuous("Aggression") +
   theme_bw() # numbers from lsmeans are very similar
 
-# Figure 4: no effect of 2d4d ratio
+# Figure 2: no effect of 2d4d ratio
 # faceted scatterplot w/ right-hand 2d4d:
 ggplot(data=dat, aes(x=R2d4d, y=DV)) +
   geom_jitter(width = 0, height = .1, cex=1, alpha=.5) +
@@ -87,7 +63,7 @@ ggplot(data=dat, aes(x=R2d4d, y=DV)) +
   facet_wrap(~Violence*Difficulty) +
   scale_y_discrete(limits=1:9, breaks=c(1,3,5,7,9)) +
   scale_x_continuous(limits = c(.85, 1.07))
-ggsave("Figure4a.png", width=6, height=3.7, units="in")
+ggsave("Figure2a.png", width=6, height=3.7, units="in")
 
 # faceted scatterplot w/ left-hand 2d4d:
 ggplot(data=dat, aes(x=L2d4d, y=DV)) +
@@ -100,7 +76,21 @@ ggplot(data=dat, aes(x=L2d4d, y=DV)) +
   facet_wrap(~Violence*Difficulty) +
   scale_y_discrete(limits=1:9, breaks=c(1,3,5,7,9)) +
   scale_x_continuous(limits = c(.85, 1.07))#+
-ggsave("Figure4b.png", width=6, height=3.7, units="in")
+ggsave("Figure2b.png", width=6, height=3.7, units="in")
+
+# Supplementary figure ----
+# Supp Figure 1: feedback negative affect influences aggression
+ggplot(dat, aes(x=feedback.NA, y = DV)) +
+  geom_point(cex=2, alpha=.5, position=position_jitter(height=.1)) +
+  geom_smooth() +
+  scale_x_continuous("Experienced provocation")+
+  scale_y_continuous("Coldpressor duration") +
+  #ggtitle("Dependent Variable is Sensitive") +
+  bigtext
+ggsave("SuppFigure1.png", width = 5.5, height = 4, units="in")
+
+
+
 
 # Manipulation checks ----
 # Violent content

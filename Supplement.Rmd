@@ -5,10 +5,6 @@ date: "March 25, 2016"
 output: pdf_document
 ---
 
-<!--- This is a chore because broom::tidy doesn't work on censReg objects, so I can't use hilgard::report_t() --->
-
-###Censored regression. 
-To attempt to ameliorate the potential ceiling effect, a censored regression model was fit with the 'censReg' package for R (Henningsen, 2013). This fits a censored-regression Tobit model and attempts to model values that exceed the maximum of the scale.
 
 ```{r, echo = FALSE, warning = FALSE, include = FALSE}
 library(readxl)
@@ -91,6 +87,38 @@ report_t_censReg <- function(model, effect, metric = "b", n1, n2) {
 # tidyCensReg(censModel2.1) # right hand with covar
 ```
 
+###Distribution of outcome
+```{r, echo = F, warning = F}
+ggplot(dat, aes(x=DV)) + 
+  geom_bar() +
+  facet_wrap(~Violence+Difficulty, nrow=2) +
+  scale_x_discrete("Coldpressor Assignment", limits = c(1:9)) +
+  theme(strip.text.x = element_text(size = 12),
+        axis.title.x = element_text(size = 14)) +
+  theme_bw()
+```
+This histogram provides greater detail into the non-normality of the outcome.
+
+###Provocation and aggression
+```{r, echo = F, warning = F}
+bigtext <- theme(axis.title = element_text(size=14),
+                 plot.title = element_text(size=16))
+ggplot(dat, aes(x=feedback.NA, y = DV)) +
+  geom_point(cex=2, alpha=.5, position=position_jitter(height=.1)) +
+  geom_smooth() +
+  scale_x_continuous("Experienced provocation")+
+  scale_y_continuous("Coldpressor duration") +
+  #ggtitle("Dependent Variable is Sensitive") +
+  bigtext
+```
+This scatterplot shows the relationship between participants’ experienced provocation and their cold pressor assignments. A locally-weighted regression curve (LOESS) with shaded standard error region is overlaid.
+
+
+<!--- This is a chore because broom::tidy doesn't work on censReg objects, so I can't use hilgard::report_t() --->
+
+###Censored regression. 
+To attempt to ameliorate the potential ceiling effect, a censored regression model was fit with the 'censReg' package for R (Henningsen, 2013). This fits a censored-regression Tobit model and attempts to model values that exceed the maximum of the scale.
+
 Application of this analysis to 2 Violence $\times$ 2 Difficulty ANOVA found no significant effects of violence (`r report_t_censReg(censModel3, "vioContr", "r", 275/2, 275/2)`), difficulty (`r report_t_censReg(censModel3, "diffContr", "r", 275/2, 275/2)`), or their interaction (`r report_t_censReg(censModel3, "diffContr:vioContr", "r", 275/2, 275/2)`). A significant effect of irritation with the partner's feedback was observed, but applying this as a covariate did not affect the primary results.
 
 Main effects of 2D:4D on aggression were again negligible. Left 2D:4D did not predict aggression, `r report_t_censReg(censModel1, "L2d4d_std")`, nor did right 2D:4D, `r report_t_censReg(censModel2, "R2d4d_std")`. Application of composite irritation as a covariate did not influence the estimated effect. Higher-order interactions of 2D:4D with factors of Violence or Difficulty were not supported by the results (all |*t*| < 1), with the exception of a Difficulty $\times$ Violence $\times$ Right 2D:4D interaction that was barely significant after adjusting for irritation (*p* = .044).
@@ -137,21 +165,42 @@ Participants' gameplay variables were submitted to parallel analysis. However, f
 
 ### Manipulation checks
 
-Here's the full output for the effect of condition on the manipulation checks.
+Here we provide the full model output for the effects of condition on the manipulation checks.
 
 Participants' responses to "The game involved a great deal of violence" were influenced by game violence but not difficulty.
 ```{r, echo = F}
 summary(lm(violence ~ Difficulty * Violence, data = dat))
+dat %>% 
+  ggplot(aes(x=violence)) +
+  geom_bar(stat="count") +
+  facet_wrap(~Violence) +
+  scale_x_discrete("Rated violent content", limits=1:7) +
+  scale_y_continuous("Count") +
+  ggtitle("Violent Content Manipulation Check") + 
+  bigtext
 ```
 
 Participants' responses to "I felt I behaved aggressively during the game" were mostly influenced by game violence, but there was a hint of an interaction with difficulty. 
 ```{r, echo = F}
 summary(lm(aggressed ~ Violence*Difficulty, data = dat))
+ggplot(dat, aes(x = aggressed)) +
+  geom_bar(stat = "count") +
+  scale_x_discrete("Rated aggression", limits=1:7) +
+  scale_y_continuous("Count") +
+  #geom_jitter(height = .2, width = .3) +
+  facet_grid(~Violence)
 ```
 
 The latent factor representing challenge was affected by difficulty but not by violence.
 ```{r, echo = F}
 summary(lm(challenge ~ Violence*Difficulty, data = dat))
+ggplot(dat, aes(x=challenge)) +
+  geom_histogram() +
+  facet_wrap(~Difficulty) +
+  scale_x_continuous("Ratings of Difficulty") +
+  scale_y_continuous("Count") +
+  ggtitle("Difficulty Manipulation Check") +
+  bigtext
 ```
 
 

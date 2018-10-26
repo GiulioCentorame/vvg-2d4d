@@ -1,0 +1,10 @@
+variable "Less Violent_Easy_mean" "Less Violent_Easy_sd" "Less Violent_Hard_mean" "Less Violent_Hard_sd" Violent_Easy_mean Violent_Easy_sd Violent_Hard_mean Violent_Hard_sd
+aggressed 2.6 1.53 2.93 1.56 3.87 1.85 3.33 1.69
+challenge -0.35 0.82 0.27 0.81 -0.32 0.64 0.38 1.05
+discomfort -0.41 0.56 0.46 0.92 -0.4 0.52 0.33 1.01
+DV 5.53 2.54 6.29 2.47 6.31 2.24 6.13 2.46
+excitement -0.79 0.84 0.2 0.76 0.1 0.86 0.46 0.86
+feedback.NA -0.02 0.86 0.06 1 0.04 0.77 -0.07 0.99
+feedback.PA -0.05 0.92 0.02 0.94 -0.04 0.71 0.08 1.06
+gore -0.15 0.64 -0.64 0.6 0.81 0.6 -0.03 0.78
+violence 2.16 1.42 2.26 1.24 5.44 1.42 5.09 1.68

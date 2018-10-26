@@ -1,7 +1,7 @@
 # master script
 # install.packages(c('rms', 'MBESS', 'censReg', 'tidyverse', 'broom',
 # 'car', 'BayesFactor', 'psych', 'devtools', 'rmarkdown', 'compute.es',
-# 'GPArotation', 'ordinal'))
+# 'GPArotation', 'ordinal', 'broom'))
 # library(devtools)
 # install_github("Joe-Hilgard/hilgard")
 library(rmarkdown)
