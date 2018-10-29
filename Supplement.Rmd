@@ -87,6 +87,13 @@ report_t_censReg <- function(model, effect, metric = "b", n1, n2) {
 # tidyCensReg(censModel2.1) # right hand with covar
 ```
 
+###Video game stimuli
+Demo footage of the four games can be seen on Youtube:
+Violent-difficult: https://www.youtube.com/watch?v=3uZlcT55vZM
+Less-violent-difficult: https://www.youtube.com/watch?v=MNKiBkOtKpM
+Violent-easy: https://www.youtube.com/watch?v=0BRu1R7twkU
+Less-violent easy: https://www.youtube.com/watch?v=wWkok-iLfWw
+
 ###Distribution of outcome
 ```{r, echo = F, warning = F}
 ggplot(dat, aes(x=DV)) + 
@@ -207,6 +214,7 @@ ggplot(dat, aes(x=challenge)) +
   bigtext
 ```
 
+Parallel analysis suggested a two-factor solution for participants’ ratings of their interaction with their partner. Factors were extracted using oblimin rotation. The first factor accounted for 52% of the variance and had loadings indicating provocation: .77, .76, and .67 for irritation, anger, and annoyance and -.25, .02, and .02 for happiness, helpfulness, and pleasure. This provocation factor was then used as a linear predictor of cold pressor assignment.
 
 ### Nonparametric correlations
 
