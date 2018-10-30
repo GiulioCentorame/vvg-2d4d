@@ -80,6 +80,9 @@ report_t_censReg <- function(model, effect, metric = "b", n1, n2) {
   return(output)
 }
   
+bigtext <- theme(axis.title = element_text(size=14),
+                 plot.title = element_text(size=16))
+
 # Maybe easiest just to report as a series of supplementary tables
 # tidyCensReg(censModel1) # Left hand
 # tidyCensReg(censModel1.1) # Left hand with covar
@@ -88,11 +91,55 @@ report_t_censReg <- function(model, effect, metric = "b", n1, n2) {
 ```
 
 ###Video game stimuli
-Demo footage of the four games can be seen on Youtube:
-Violent-difficult: https://www.youtube.com/watch?v=3uZlcT55vZM
-Less-violent-difficult: https://www.youtube.com/watch?v=MNKiBkOtKpM
-Violent-easy: https://www.youtube.com/watch?v=0BRu1R7twkU
-Less-violent easy: https://www.youtube.com/watch?v=wWkok-iLfWw
+Here are hyperlinks to demo footage of the four modified games on YouTube:
+
+[Violent, difficult](https://www.youtube.com/watch?v=3uZlcT55vZM)
+
+[Less-violent, difficult](https://www.youtube.com/watch?v=MNKiBkOtKpM)
+
+[Violent, easy](https://www.youtube.com/watch?v=0BRu1R7twkU)
+
+[Less-violent, easy](https://www.youtube.com/watch?v=wWkok-iLfWw)
+
+### Manipulation checks
+Here we provide the full model output for the effects of condition on the manipulation checks.
+
+Participants' responses to "The game involved a great deal of violence" were influenced by game violence but not difficulty.
+```{r, echo = F}
+summary(lm(violence ~ Difficulty * Violence, data = dat))
+dat %>% 
+  ggplot(aes(x=violence)) +
+  geom_bar(stat="count") +
+  facet_wrap(~Violence) +
+  scale_x_discrete("Rated violent content", limits=1:7) +
+  scale_y_continuous("Count") +
+  ggtitle("Violent Content Manipulation Check") + 
+  bigtext
+```
+
+Participants' responses to "I felt I behaved aggressively during the game" were mostly influenced by game violence, but there was a hint of an interaction with difficulty. 
+```{r, echo = F}
+summary(lm(aggressed ~ Violence*Difficulty, data = dat))
+ggplot(dat, aes(x = aggressed)) +
+  geom_bar(stat = "count") +
+  scale_x_discrete("Rated aggression", limits=1:7) +
+  scale_y_continuous("Count") +
+  #geom_jitter(height = .2, width = .3) +
+  facet_grid(~Violence)
+```
+
+The latent factor representing challenge (see "Exploratory analyses" for details on factor structure) was affected by difficulty but not by violence.
+```{r, echo = F}
+summary(lm(challenge ~ Violence*Difficulty, data = dat))
+ggplot(dat, aes(x=challenge)) +
+  geom_histogram() +
+  facet_wrap(~Difficulty) +
+  scale_x_continuous("Ratings of Difficulty") +
+  scale_y_continuous("Count") +
+  ggtitle("Difficulty Manipulation Check") +
+  bigtext
+```
+
 
 ###Distribution of outcome
 ```{r, echo = F, warning = F}
@@ -107,12 +154,18 @@ ggplot(dat, aes(x=DV)) +
 This histogram provides greater detail into the non-normality of the outcome.
 
 ###Provocation and aggression
+Participants generally indicated that they were irritated (*M* = 5.0, *SD* = 1.7), angered (*M* = 4.2, *SD* = 1.8), and annoyed (*M* = 4.9, *SD* = 1.8) by their partner. Furthermore, they were neither happy (*M* = 2.4, *SD* = 1.4) nor pleased (*M* = 2.2, *SD* = 1.4) with their partner and found the feedback unhelpful (*M* = 1.7, *SD* = 1.3). 
+
+The 6 items about the interaction with the partner were submitted to parallel analysis. Parallel analysis recommended two factors. Factor 1 had loadings >.65 on irritated, angered, and annoyed, with loadings < .3 otherwise. Factor 2 had loadings .57, .61, and .89 for happy, helpful, and pleased.
+
+```{r, echo = F}
+round(efa$loadings, 2)
+```
+
 ```{r, echo = F, warning = F}
-bigtext <- theme(axis.title = element_text(size=14),
-                 plot.title = element_text(size=16))
 ggplot(dat, aes(x=feedback.NA, y = DV)) +
   geom_point(cex=2, alpha=.5, position=position_jitter(height=.1)) +
-  geom_smooth() +
+  geom_smooth(method = "loess") +
   scale_x_continuous("Experienced provocation")+
   scale_y_continuous("Coldpressor duration") +
   #ggtitle("Dependent Variable is Sensitive") +
@@ -152,12 +205,6 @@ summary(ordmod.r)
 
 
 ###Exploratory analyses.
-The 6 items about the interaction with the partner were submitted to parallel analysis. Parallel analysis recommended two factors. Factor 1 had loadings >.65 on irritated, angered, and annoyed, with loadings < .3 otherwise. Factor 2 had loadings .57, .61, and .89 for happy, helpful, and pleased.
-
-```{r, echo = F}
-round(efa$loadings, 2)
-```
-
 The 18 items about the gameplay session were submitted to parallel analysis. Parallel analysis recommended four factors. Loadings with absolute value greater than .1 are displayed below.  The first factor appears to represent excitement and enjoyment of the game. The second factor appears to represent the extent to which the game was stressful. The third factor appears to represent whether the participant struggled with the game's controls and navigation. The fourth factor featured items indicating whether the player perceived the game as involving violence and gore, but it also featured loadings regarding whether the player's guns/zorchers were satisfying and effective.
 
 ```{r echo=F, warning = F}
@@ -174,50 +221,7 @@ Questions about the players’ experience of the game had a four-factor structur
 
 History of game use was found to have a two-factor structure, with the first factor reflecting experience with video games in general and the second factor reflecting experience with first-person shooters in specific. One of the six items, “I’ve often played games like the one I played today,” had to be discarded to prevent a Heywood case. Neither factor significantly predicted aggression (general experience, *t*(245) = -0.09, *p* = .93, *r* = -.01 [-.13, .12]; FPS experience, *t*(245) = 0.58, *p* = .566, *r* = .04 [-.09, .16]). These results are not consistent with reports of cross-sectional associations between use of violent video games and aggression.
 
-### Manipulation checks
-
-Here we provide the full model output for the effects of condition on the manipulation checks.
-
-Participants' responses to "The game involved a great deal of violence" were influenced by game violence but not difficulty.
-```{r, echo = F}
-summary(lm(violence ~ Difficulty * Violence, data = dat))
-dat %>% 
-  ggplot(aes(x=violence)) +
-  geom_bar(stat="count") +
-  facet_wrap(~Violence) +
-  scale_x_discrete("Rated violent content", limits=1:7) +
-  scale_y_continuous("Count") +
-  ggtitle("Violent Content Manipulation Check") + 
-  bigtext
-```
-
-Participants' responses to "I felt I behaved aggressively during the game" were mostly influenced by game violence, but there was a hint of an interaction with difficulty. 
-```{r, echo = F}
-summary(lm(aggressed ~ Violence*Difficulty, data = dat))
-ggplot(dat, aes(x = aggressed)) +
-  geom_bar(stat = "count") +
-  scale_x_discrete("Rated aggression", limits=1:7) +
-  scale_y_continuous("Count") +
-  #geom_jitter(height = .2, width = .3) +
-  facet_grid(~Violence)
-```
-
-The latent factor representing challenge was affected by difficulty but not by violence.
-```{r, echo = F}
-summary(lm(challenge ~ Violence*Difficulty, data = dat))
-ggplot(dat, aes(x=challenge)) +
-  geom_histogram() +
-  facet_wrap(~Difficulty) +
-  scale_x_continuous("Ratings of Difficulty") +
-  scale_y_continuous("Count") +
-  ggtitle("Difficulty Manipulation Check") +
-  bigtext
-```
-
-Parallel analysis suggested a two-factor solution for participants’ ratings of their interaction with their partner. Factors were extracted using oblimin rotation. The first factor accounted for 52% of the variance and had loadings indicating provocation: .77, .76, and .67 for irritation, anger, and annoyance and -.25, .02, and .02 for happiness, helpfulness, and pleasure. This provocation factor was then used as a linear predictor of cold pressor assignment.
-
 ### Nonparametric correlations
-
 Because the outcome was not normally distributed, one may want a nonparametric approach to the correlations. Here's a table of Kendall's Tau.
 
 ```{r, echo = F}

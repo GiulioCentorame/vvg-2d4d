@@ -454,5 +454,10 @@ summary(lm(DV ~ violence, data = dat, subset = Condition == 2)) # within 2
 summary(lm(DV ~ violence, data = dat, subset = Condition == 3)) # within 3
 summary(lm(DV ~ violence, data = dat, subset = Condition == 4)) # within 4
 
+# condense provocation rating to a single number
+dat %>% 
+  mutate(net = (irritated + angered + annoyed + 3*7 - happy - pleased - helpful)/6) %>% 
+  summarize(m = mean(net, na.rm = T), sd = sd(net, na.rm = T))
+
 # Save output for calling in .RMD file ----
 save.image()
