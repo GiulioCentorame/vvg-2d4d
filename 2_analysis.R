@@ -436,14 +436,14 @@ summary(lm(DV ~ vg.cumul, data = dat))
 ex.cumul <- lm(DV ~ vg.cumul, data = dat)
 
 # Exploratory analyses to see if game variables predict aggression
-summary(lm(DV ~ Game.1, data = dat))
+summary(lm(DV ~ Game.1 * Violence, data = dat))
 ex1 <- (lm(DV ~ Game.2, data = dat)) # p = .0125
 summary(lm(DV ~ Game.2 * Violence, data = dat)) 
-summary(lm(DV ~ Game.3, data = dat)) # p = .081
-summary(lm(DV ~ Game.4, data = dat)) # p = .028
-summary(lm(DV ~ Game.5, data = dat)) 
-summary(lm(DV ~ Game.6, data = dat))
-ex2 <- (lm(DV ~ I(Game.4+Game.5), data = dat))
+summary(lm(DV ~ Game.3 * Violence, data = dat)) # p = .081
+summary(lm(DV ~ Game.4 * Violence, data = dat)) # p = .028
+summary(lm(DV ~ Game.5 * Violence, data = dat)) 
+summary(lm(DV ~ Game.6 * Violence, data = dat))
+ex2 <- (lm(DV ~ I(Game.4+Game.5) * Violence, data = dat))
 
 ggplot(dat, aes(x = Game.2, y = DV, col = Violence)) + geom_point() + geom_smooth()
 
