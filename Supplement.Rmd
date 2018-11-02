@@ -171,7 +171,7 @@ ggplot(dat, aes(x=feedback.NA, y = DV)) +
   #ggtitle("Dependent Variable is Sensitive") +
   bigtext
 ```
-This scatterplot shows the relationship between participants’ experienced provocation and their cold pressor assignments. A locally-weighted regression curve (LOESS) with shaded standard error region is overlaid.
+This scatterplot shows the relationship between Factor 1 and cold pressor assignments. A locally-weighted regression curve (LOESS) with shaded standard error region is overlaid. Slight vertical jitter is added to reduce overplotting. Participants who reported being more irritated, angered, and annoyed by their partner assigned greater cold pressor durations.
 
 
 <!--- This is a chore because broom::tidy doesn't work on censReg objects, so I can't use hilgard::report_t() --->
@@ -194,7 +194,7 @@ Main effects of 2D:4D on aggression were again negligible. Left 2D:4D did not pr
 <!--- May benefit from more detail, or just some tables --->
 The outcome could also be treated as an ordinal value. We used ordinal logistic regression via the "ordinal" package for R (Christensen, 2018) to fit the 2 Violence $\times$ 2 Difficulty ANOVA. No significant effects were observed. Addition of left or right 2d4d ratio to these models revealed no significant effects.
 
-Applying composite irritation as a covariate generally did not affect the results. As with the censored regression approach above, the Violence $\times$ Difficulty $\times$ Right 2D:4D interaction just reached significance after application of the covariate (*p* = .019).
+Applying composite irritation as a covariate generally did not affect the results. As with the censored regression approach above, the Violence $\times$ Difficulty $\times$ Right 2D:4D interaction just reached significance after adjustment for irritation (*p* = .019).
 
 ```{r, echo = F}
 summary(ordmod)
