@@ -121,4 +121,14 @@ ggplot(dat, aes(x = Violence, y = aggressed)) +
   #geom_jitter(height = .2, width = .3) +
   facet_grid(~Difficulty)
 
-
+dat %>% 
+  filter(dat$violence != -999, !is.na(dat$Condition)) %>% 
+  ggplot(aes(x=aggressed)) +
+  geom_bar(stat="count") +
+  facet_wrap(~Violence) +
+  scale_x_discrete("Did you aggress in the game?", limits=1:7) +
+  scale_y_continuous("Count") +
+  #geom_vline(4) +
+  ggtitle("Do participants see themselves aggressing in game?") + 
+  bigtext
+ggsave("aggressed-condition_hist.png", width = 5.5, height = 4, units="in")
