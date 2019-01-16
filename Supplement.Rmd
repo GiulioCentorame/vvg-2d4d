@@ -241,7 +241,7 @@ mutate(dat, avg_2d4d = (L2d4d_std + R2d4d_std)/2) %>%
 ```
 
 ### Summary stats
-A table of summary stats by condition is available in the repository as means_sds.txt.
+A table of summary stats by condition is available in the repository as tables\\means_sds.txt.
 ```{r, echo = F}
 dat %>% 
   group_by(Violence, Difficulty) %>% 

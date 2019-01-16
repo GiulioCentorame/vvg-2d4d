@@ -129,6 +129,6 @@ dat %>%
   scale_x_discrete("Did you aggress in the game?", limits=1:7) +
   scale_y_continuous("Count") +
   #geom_vline(4) +
-  ggtitle("Do participants see themselves aggressing in game?") + 
+  ggtitle("In-game behavior aggressive?") + 
   bigtext
 ggsave("aggressed-condition_hist.png", width = 5.5, height = 4, units="in")
