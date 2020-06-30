@@ -1,0 +1,8 @@
+---
+title: "Reproducibility notes"
+output: html_reproducibility
+---
+
+The script has been taken from the author's [[github:Joe-Hilgard/vvg-2d4d][GitHub]], as referred to by the [[https://osf.io/cwenz/][OSF link]] reported in the article. The repository has been forked [[github:GiulioCentorame/vvg-2d4d][here]] and downloaded in such form.
+
+Packages versions were retrieved from session_info.txt
