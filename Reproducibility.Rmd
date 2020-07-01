@@ -5,4 +5,29 @@ output: html_reproducibility
 
 The script has been taken from the author's [[github:Joe-Hilgard/vvg-2d4d][GitHub]], as referred to by the [[https://osf.io/cwenz/][OSF link]] reported in the article. The repository has been forked [[github:GiulioCentorame/vvg-2d4d][here]] and downloaded in such form.
 
-Packages versions were retrieved from session_info.txt
+The authors did not provide any environment to work in, so base and installed package versions were retrieved from session_info.txt.
+(We assume all the dependency for R 3.4.1 are already installed on the machine)
+
+First, install the right version of R: 
+
+```{bash}
+export R_VERSION=3.4.1
+curl -O https://cran.rstudio.com/src/base/R-3/R-${R_VERSION}.tar.gz
+tar -xzvf R-${R_VERSION}.tar.gz
+cd R-${R_VERSION}
+./configure \
+    --prefix=/opt/R/${R_VERSION} \
+    --enable-memory-profiling \
+    --enable-R-shlib \
+    --with-blas \
+    --with-lapack \
+    CFLAGS=-fPIC \
+    CXXFLAGS=-fPIC \
+    FPICFLAGS=-fPIC \ 
+    CPICFLAGS=-fPIC \
+    --enable-shared
+
+make
+
+sudo make install
+```
