@@ -11,9 +11,23 @@ The authors did not provide any environment to work in, so base and installed pa
 First, install the right version of R: 
 
 ```{bash}
-# I am downloading it from archive.org because even the Arch archive doesn't have it anymore
-# Also, I don't know why, I can't compile the source from my laptop
+export R_VERSION=3.4.1
+curl -O https://cran.rstudio.com/src/base/R-3/R-${R_VERSION}.tar.gz
+tar -xzvf R-${R_VERSION}.tar.gz
+cd R-${R_VERSION}
+./configure \
+    --prefix=/opt/R/${R_VERSION} \
+    --enable-memory-profiling \
+    --enable-R-shlib \
+    --with-blas \
+    --with-lapack \
+    CFLAGS=-fPIC \
+    CXXFLAGS=-fPIC \
+    FPICFLAGS=-fPIC \ 
+    CPICFLAGS=-fPIC \
+    --enable-shared
 
-curl -O https://archive.org/download/archlinux_pkg_r/r-3.4.1-3-x86_64.pkg.tar.xz
-sudo pacman -U r-3.4.1-3-x86_64.pkg.tar.xz
+make
+
+sudo make install
 ```
