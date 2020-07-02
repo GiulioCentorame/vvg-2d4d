@@ -2,32 +2,57 @@
 title: "Reproducibility notes"
 output: html_reproducibility
 ---
+# Preparation
 
 The script has been taken from the author's [[github:Joe-Hilgard/vvg-2d4d][GitHub]], as referred to by the [[https://osf.io/cwenz/][OSF link]] reported in the article. The repository has been forked [[github:GiulioCentorame/vvg-2d4d][here]] and downloaded in such form.
 
 The authors did not provide any environment to work in, so base and installed package versions were retrieved from session_info.txt.
-(We assume all the dependency for R 3.4.1 are already installed on the machine)
+(We assume all the dependencies for R 3.4.1 are already installed on the machine)
 
-First, install the right version of R: 
+## Set up the environment
 
+<!-- TODO: need to fix this jerk, keeps giving me a compilation error -->
+<!-- First, install the right version of R: -->
+<!-- ```{bash} -->
+<!-- export R_VERSION=3.4.1 -->
+<!-- curl -O https://cran.rstudio.com/src/base/R-3/R-${R_VERSION}.tar.gz -->
+<!-- tar -xzvf R-${R_VERSION}.tar.gz -->
+<!-- cd R-${R_VERSION} -->
+<!-- ./configure \ -->
+<!--     --prefix=/opt/R/${R_VERSION} \ -->
+<!--     --enable-memory-profiling \ -->
+<!--     --enable-R-shlib \ -->
+<!--     --with-blas \ -->
+<!--     --with-lapack \ -->
+<!--     CFLAGS=-fPIC \ -->
+<!--     CXXFLAGS=-fPIC \ -->
+<!--     FPICFLAGS=-fPIC \  -->
+<!--     CPICFLAGS=-fPIC \ -->
+<!--     --enable-shared -->
+
+<!-- make -->
+
+<!-- sudo make install -->
+<!-- ``` -->
+
+To get the package list:
 ```{bash}
-export R_VERSION=3.4.1
-curl -O https://cran.rstudio.com/src/base/R-3/R-${R_VERSION}.tar.gz
-tar -xzvf R-${R_VERSION}.tar.gz
-cd R-${R_VERSION}
-./configure \
-    --prefix=/opt/R/${R_VERSION} \
-    --enable-memory-profiling \
-    --enable-R-shlib \
-    --with-blas \
-    --with-lapack \
-    CFLAGS=-fPIC \
-    CXXFLAGS=-fPIC \
-    FPICFLAGS=-fPIC \ 
-    CPICFLAGS=-fPIC \
-    --enable-shared
-
-make
-
-sudo make install
+#!/bin/awk -f
+# data.table doesn't like the asterisks, so we're getting rid of them
+cat session_info.txt | awk '{gsub("*", ""); print }' >> package_table.txt
 ```
+
+<!-- TODO: REMOVE LAST COLUMN -->
+
+
+```{r}
+install.packages("here")
+library(here)
+library(readr)
+
+pkg <- read_table2("package_table.txt", 
+    col_names = , skip = 9)
+```
+
+
+
